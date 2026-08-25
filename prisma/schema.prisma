@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  APPLICANT
+  CHANNEL_PARTNER
+  REVIEWER
+  ADMIN
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  TRANSGENDER
+  NON_BINARY
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum LoanCategory {
+  MICRO_FINANCE
+  TERM_LOAN
+  EDUCATION_LOAN
+}
+
+enum ChannelPartnerType {
+  BANK
+  NBFC
+  MICROFINANCE_INSTITUTION
+  NGO
+  COMMON_SERVICE_CENTRE
+  SELF_HELP_GROUP
+  EDUCATIONAL_INSTITUTION
+  OTHER
+}
+
+enum ApplicationStatus {
+  DRAFT
+  EXTRACTION_PENDING
+  EXTRACTION_COMPLETE
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  DISBURSED
+  WITHDRAWN
+}
+
+enum DocumentType {
+  AADHAAR
+  PAN
+  ADDRESS_PROOF
+  INCOME_PROOF
+  BANK_STATEMENT
+  PROJECT_REPORT
+  EDUCATION_CERTIFICATE
+  ADMISSION_LETTER
+  FEE_STRUCTURE
+  OTHER
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  PROCESSED
+  FAILED
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  phone        String?  @unique
+  name         String
+  passwordHash String?  @map("password_hash")
+  role         UserRole @default(APPLICANT)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  applications      Application[]
+  managedPartner    ChannelPartner?  @relation("PartnerManager")
+  uploadedDocuments DocumentUpload[] @relation("DocumentUploader")
+  verifiedDocuments DocumentUpload[] @relation("DocumentVerifier")
+
+  @@map("users")
+}
+
+model LoanScheme {
+  id                  String       @id @default(cuid())
+  slug                String       @unique
+  name                String
+  provider            String
+  category            LoanCategory
+  description         String
+  minAmount           Decimal      @default(0) @map("min_amount") @db.Decimal(14, 2)
+  maxAmount           Decimal      @map("max_amount") @db.Decimal(14, 2)
+  minAnnualIncome     Decimal?     @map("min_annual_income") @db.Decimal(14, 2)
+  maxAnnualIncome     Decimal?     @map("max_annual_income") @db.Decimal(14, 2)
+  interestRateMin     Decimal?     @map("interest_rate_min") @db.Decimal(5, 2)
+  interestRateMax     Decimal?     @map("interest_rate_max") @db.Decimal(5, 2)
+  tenureMonthsMin     Int?         @map("tenure_months_min")
+  tenureMonthsMax     Int?         @map("tenure_months_max")
+  projectCategories   String[]     @default([]) @map("project_categories")
+  eligibleTrades      String[]     @default([]) @map("eligible_trades")
+  eligibleGenders     Gender[]     @default([]) @map("eligible_genders")
+  collateralRequired  Boolean      @default(false) @map("collateral_required")
+  eligibilityCriteria Json?        @map("eligibility_criteria")
+  requiredDocuments   String[]     @default([]) @map("required_documents")
+  sourceUrl           String?      @map("source_url")
+  isActive            Boolean      @default(true) @map("is_active")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  applications Application[]
+
+  @@index([category, isActive])
+  @@index([maxAmount])
+  @@map("loan_schemes")
+}
+
+model ChannelPartner {
+  id                 String             @id @default(cuid())
+  name               String
+  type               ChannelPartnerType
+  registrationNumber String?            @unique @map("registration_number")
+  email              String?            @unique
+  phone              String?
+  addressLine        String?            @map("address_line")
+  district           String?
+  state              String?
+  pincode            String?
+  serviceRadiusKm    Decimal?           @map("service_radius_km") @db.Decimal(7, 2)
+  isVerified         Boolean            @default(false) @map("is_verified")
+  isActive           Boolean            @default(true) @map("is_active")
+  managerId          String?            @unique @map("manager_id")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  // PostGIS is not natively queryable by Prisma. The initial migration enables
+  // PostGIS before creating this nullable geography column and its GiST index.
+  // Read and write `location` with Prisma raw SQL / TypedSQL.
+  location Unsupported("geography(Point, 4326)")?
+
+  manager      User?         @relation("PartnerManager", fields: [managerId], references: [id], onDelete: SetNull)
+  applications Application[]
+
+  @@index([district, state, isActive])
+  @@index([location], map: "channel_partners_location_gist_idx", type: Gist)
+  @@map("channel_partners")
+}
+
+model Application {
+  id               String            @id @default(cuid())
+  referenceNumber  String            @unique @default(cuid()) @map("reference_number")
+  status           ApplicationStatus @default(DRAFT)
+  userId           String            @map("user_id")
+  loanSchemeId     String?           @map("loan_scheme_id")
+  channelPartnerId String?           @map("channel_partner_id")
+
+  // Structured output accepted from the external FastAPI AI service. These
+  // fields stay nullable until extraction has completed.
+  projectCategory String?  @map("project_category")
+  requestedAmount Decimal? @map("requested_amount") @db.Decimal(14, 2)
+  annualIncome    Decimal? @map("annual_income") @db.Decimal(14, 2)
+  trade           String?
+  gender          Gender?
+
+  aiOutput         Json?     @map("ai_output")
+  aiConfidence     Decimal?  @map("ai_confidence") @db.Decimal(5, 4)
+  aiServiceVersion String?   @map("ai_service_version")
+  aiProcessedAt    DateTime? @map("ai_processed_at")
+  submittedAt      DateTime? @map("submitted_at")
+  decidedAt        DateTime? @map("decided_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  loanScheme     LoanScheme?      @relation(fields: [loanSchemeId], references: [id], onDelete: SetNull)
+  channelPartner ChannelPartner?  @relation(fields: [channelPartnerId], references: [id], onDelete: SetNull)
+  documents      DocumentUpload[]
+
+  @@index([userId, createdAt])
+  @@index([loanSchemeId, status])
+  @@index([channelPartnerId, status])
+  @@index([status, createdAt])
+  @@map("applications")
+}
+
+model DocumentUpload {
+  id               String         @id @default(cuid())
+  applicationId    String         @map("application_id")
+  uploadedById     String         @map("uploaded_by_id")
+  verifiedById     String?        @map("verified_by_id")
+  type             DocumentType
+  status           DocumentStatus @default(UPLOADED)
+  originalFileName String         @map("original_file_name")
+  storageKey       String         @unique @map("storage_key")
+  mimeType         String         @map("mime_type")
+  sizeBytes        Int            @map("size_bytes")
+  checksum         String?
+  extractedData    Json?          @map("extracted_data")
+  failureReason    String?        @map("failure_reason")
+  verifiedAt       DateTime?      @map("verified_at")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  uploadedBy  User        @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+  verifiedBy  User?       @relation("DocumentVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, type])
+  @@index([status, createdAt])
+  @@map("document_uploads")
+}
