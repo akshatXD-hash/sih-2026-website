@@ -140,6 +140,8 @@ model ChannelPartner {
   serviceRadiusKm     Decimal?           @map("service_radius_km") @db.Decimal(7, 2)
   fundQuotaAmount     Decimal?           @map("fund_quota_amount") @db.Decimal(14, 2)
   availableFundAmount Decimal?           @map("available_fund_amount") @db.Decimal(14, 2)
+  npaPercentage       Decimal?           @map("npa_percentage") @db.Decimal(5, 2)
+  healthUpdatedAt     DateTime?          @map("health_updated_at")
   isVerified          Boolean            @default(false) @map("is_verified")
   isActive            Boolean            @default(true) @map("is_active")
   managerId           String?            @unique @map("manager_id")
