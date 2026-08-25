@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SIH Scheme Matching Platform
 
-## Getting Started
+Fullstack application built with Next.js App Router, TypeScript, Tailwind CSS,
+Prisma, and Neon PostgreSQL with PostGIS. AI/ML is an external FastAPI service;
+this repository only stores its structured response and will call or mock it in
+later phases.
 
-First, run the development server:
+## AI service handoff
+
+The external AI/FastAPI team should start with
+[`AI_SERVICE_README.md`](./AI_SERVICE_README.md). It explains how the Prisma
+schema maps to the AI JSON contract, which fields and enums to return, how
+scheme ranking should work, and where the database/security boundary sits.
+
+## Getting started
+
+Copy `.env.example` to `.env` and replace the placeholders with the pooled and
+direct connection strings from Neon. Then generate the client, create the
+development migration, and seed the database:
 
 ```bash
+npm run db:generate
+npm run db:migrate -- --name init
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in a browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Neon and migrations
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `DATABASE_URL` is the pooled Neon URL used by the Next.js runtime.
+- `DIRECT_URL` is the direct Neon URL used by Prisma CLI commands and seeding.
+- `SHADOW_DATABASE_URL` is optional. If Neon does not permit Prisma to create a
+  temporary shadow database, create a separate Neon branch and set this value.
+  It must never point at your application database.
+- `prisma migrate dev` is for development. Use `npm run db:deploy` in deployed
+  environments.
 
-## Learn More
+### PostGIS
 
-To learn more about Next.js, take a look at the following resources:
+Prisma represents `channel_partners.location` as
+`Unsupported("geography(Point, 4326)")`. The initial migration must enable the
+`postgis` extension before the table is created and must add a GiST index. Query
+or update that field with parameterized raw SQL/TypedSQL; Prisma CRUD remains
+available for the model because the field is nullable.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The seed data is representative development data. Interest rates and lender
+eligibility vary and must be verified against the source before production use.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Useful commands
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run db:generate
+npm run db:migrate -- --name <migration-name>
+npm run db:seed
+npm run db:studio
+npm run lint
+npm run build
+```
