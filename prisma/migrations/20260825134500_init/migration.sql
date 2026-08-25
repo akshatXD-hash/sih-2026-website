@@ -85,6 +85,8 @@ CREATE TABLE "channel_partners" (
     "state" TEXT,
     "pincode" TEXT,
     "service_radius_km" DECIMAL(7,2),
+    "fund_quota_amount" DECIMAL(14,2),
+    "available_fund_amount" DECIMAL(14,2),
     "is_verified" BOOLEAN NOT NULL DEFAULT false,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "manager_id" TEXT,

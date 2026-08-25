@@ -127,22 +127,24 @@ model LoanScheme {
 }
 
 model ChannelPartner {
-  id                 String             @id @default(cuid())
-  name               String
-  type               ChannelPartnerType
-  registrationNumber String?            @unique @map("registration_number")
-  email              String?            @unique
-  phone              String?
-  addressLine        String?            @map("address_line")
-  district           String?
-  state              String?
-  pincode            String?
-  serviceRadiusKm    Decimal?           @map("service_radius_km") @db.Decimal(7, 2)
-  isVerified         Boolean            @default(false) @map("is_verified")
-  isActive           Boolean            @default(true) @map("is_active")
-  managerId          String?            @unique @map("manager_id")
-  createdAt          DateTime           @default(now()) @map("created_at")
-  updatedAt          DateTime           @updatedAt @map("updated_at")
+  id                  String             @id @default(cuid())
+  name                String
+  type                ChannelPartnerType
+  registrationNumber  String?            @unique @map("registration_number")
+  email               String?            @unique
+  phone               String?
+  addressLine         String?            @map("address_line")
+  district            String?
+  state               String?
+  pincode             String?
+  serviceRadiusKm     Decimal?           @map("service_radius_km") @db.Decimal(7, 2)
+  fundQuotaAmount     Decimal?           @map("fund_quota_amount") @db.Decimal(14, 2)
+  availableFundAmount Decimal?           @map("available_fund_amount") @db.Decimal(14, 2)
+  isVerified          Boolean            @default(false) @map("is_verified")
+  isActive            Boolean            @default(true) @map("is_active")
+  managerId           String?            @unique @map("manager_id")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
 
   // PostGIS is not natively queryable by Prisma. The initial migration enables
   // PostGIS before creating this nullable geography column and its GiST index.
