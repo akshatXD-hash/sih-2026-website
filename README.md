@@ -5,12 +5,16 @@ Prisma, and Neon PostgreSQL with PostGIS. AI/ML is an external FastAPI service;
 this repository only stores its structured response and will call or mock it in
 later phases.
 
+See [`IMPLEMENTATION_PHASES.md`](./IMPLEMENTATION_PHASES.md) for the
+authoritative project sequence and its review checkpoints.
+
 ## AI service handoff
 
 The external AI/FastAPI team should start with
 [`AI_SERVICE_README.md`](./AI_SERVICE_README.md). It explains how the Prisma
 schema maps to the AI JSON contract, which fields and enums to return, how
-scheme ranking should work, and where the database/security boundary sits.
+extraction integrates with deterministic matching, and where the
+database/security boundary sits.
 
 ## Getting started
 
