@@ -16,7 +16,7 @@ Browser
 Next.js fullstack service  ----->  FastAPI AI service
    |                               - document extraction
    |                               - normalization
-   |                               - optional scheme ranking
+   |                               - optional jargon simplification
    |                                      |
    |<------------- JSON only -------------+
    |
@@ -39,7 +39,7 @@ The AI service owns:
 - extracting supported fields from applicant documents or text;
 - normalizing those fields to this contract;
 - returning confidence, evidence references, and warnings;
-- optionally ranking a scheme catalog supplied by Next.js.
+- optionally simplifying scheme language without changing its meaning.
 
 ## 2. Source-of-truth files
 
@@ -218,7 +218,7 @@ recycling
 
 These lists will evolve. Do not permanently hardcode them into a trained model
 or service release. The fullstack service should provide the current vocabulary
-in configuration or in the matching request.
+through a versioned configuration or extraction-contract update.
 
 The only valid gender values are:
 
@@ -231,93 +231,26 @@ OTHER
 PREFER_NOT_TO_SAY
 ```
 
-## 6. Optional matching endpoint
+## 6. Matching stays in the Next.js service
 
-If AI/ML is responsible for ranking schemes, use a separate endpoint:
+Do not implement a scheme-matching or loan-approval endpoint in FastAPI. The
+fullstack repository will expose a pure TypeScript engine in `lib/matching.ts`
+that receives the validated applicant profile and active `LoanScheme` records.
+It applies hard eligibility rules first, then ranks eligible schemes by coverage
+and interest concession.
 
-```http
-POST /v1/match
-Content-Type: application/json
-X-AI-Contract-Version: 1
-```
+This separation is deliberate:
 
-Next.js should send the extracted applicant profile plus the current active
-scheme catalog. The AI service should not fetch schemes directly from Neon.
+- eligibility rules remain deterministic, unit-testable, and auditable;
+- the current scheme catalog stays in Neon and is read only through Prisma;
+- an AI model cannot silently override a legal or financial constraint;
+- replacing the mock extraction service with FastAPI does not change matching.
 
-Minimal matching request:
-
-```json
-{
-  "request_id": "01JEXAMPLE9MATCH",
-  "profile": {
-    "project_category": "manufacturing",
-    "requested_amount": 1200000,
-    "annual_income": 480000,
-    "trade": "food processing",
-    "gender": "FEMALE"
-  },
-  "schemes": [
-    {
-      "slug": "pmegp-manufacturing-term-loan",
-      "category": "TERM_LOAN",
-      "min_amount": 100000,
-      "max_amount": 5000000,
-      "min_annual_income": null,
-      "max_annual_income": null,
-      "project_categories": ["manufacturing", "micro-enterprise"],
-      "eligible_trades": ["agro processing", "textiles", "recycling"],
-      "eligible_genders": [],
-      "eligibility_criteria": {
-        "age": { "min": 18 },
-        "enterprise": "new unit only"
-      }
-    }
-  ],
-  "limit": 5
-}
-```
-
-Minimal matching response:
-
-```json
-{
-  "request_id": "01JEXAMPLE9MATCH",
-  "service_version": "scheme-ai-0.1.0",
-  "matches": [
-    {
-      "scheme_slug": "pmegp-manufacturing-term-loan",
-      "score": 0.87,
-      "hard_eligible": true,
-      "reasons": [
-        "Requested amount is within the scheme range",
-        "Project category matches manufacturing"
-      ],
-      "unverified_rules": ["Applicant age was not provided"]
-    }
-  ]
-}
-```
-
-### Matching policy
-
-Apply hard constraints before semantic ranking:
-
-1. `requested_amount` must fall between `min_amount` and `max_amount` when
-   present.
-2. `annual_income` must respect the scheme's income bounds when present.
-3. A non-empty `eligible_genders` list is restrictive; an empty list means no
-   gender restriction.
-4. A non-empty project or trade list should be evaluated using canonical values
-   first. Semantic similarity may rank close terms, but it must not silently
-   override a failed legal or financial constraint.
-5. Unknown applicant data produces an unverified rule, not an eligibility pass.
-
-Return scheme **slugs**, not Prisma IDs. Next.js resolves a slug to
-`LoanScheme.id`, validates that it is active, and decides whether to set
-`Application.loanSchemeId`.
-
-Model output is a recommendation, not a loan approval. The UI and API must label
-it accordingly.
+The AI response must therefore contain extracted applicant facts, confidence,
+evidence, and warnings—not an authoritative scheme ID, scheme slug, eligibility
+decision, or approval recommendation. If the AI service later supplies a plain-
+language explanation, Next.js must derive the underlying match first and treat
+the explanation as non-authoritative display text.
 
 ## 7. Error contract
 
