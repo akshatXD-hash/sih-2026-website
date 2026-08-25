@@ -31,6 +31,8 @@ Open [http://localhost:3000](http://localhost:3000) in a browser.
 
 - `DATABASE_URL` is the pooled Neon URL used by the Next.js runtime.
 - `DIRECT_URL` is the direct Neon URL used by Prisma CLI commands and seeding.
+- Keep `sslmode=verify-full&channel_binding=require` on Neon URLs so the server
+  certificate and SCRAM channel binding are verified explicitly.
 - `SHADOW_DATABASE_URL` is optional. If Neon does not permit Prisma to create a
   temporary shadow database, create a separate Neon branch and set this value.
   It must never point at your application database.
