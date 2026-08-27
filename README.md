@@ -19,8 +19,10 @@ database/security boundary sits.
 ## Getting started
 
 Copy `.env.example` to `.env` and replace the placeholders with the pooled and
-direct connection strings from Neon. Then generate the client, create the
-development migration, and seed the database:
+direct connection strings from Neon. Generate `AUTH_SECRET` with
+`npx auth secret`; set `AUTH_TRUST_HOST=true` only when the deployment platform
+forwards a trusted host header. Then generate the client, create the development
+migration, and seed the database:
 
 ```bash
 npm run db:generate
@@ -30,6 +32,23 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in a browser.
+
+Public registration creates only `APPLICANT` users. To exercise the protected
+officer dashboard locally, set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`
+(12+ characters) in `.env`, rerun `npm run db:seed`, and sign in at `/login`.
+The seed never contains a hardcoded password.
+
+## Phase 2 routes and authorization
+
+- `/eligibility` is a two-step applicant wizard that creates an owned draft.
+- `/schemes`, `/branches`, and `/applications/new` continue the applicant flow.
+- `/admin` accepts `ADMIN`, `CHANNEL_PARTNER`, and `REVIEWER` roles only.
+- Auth.js uses its required `/api/auth/[...nextauth]` protocol handler. Feature
+  forms use Server Actions; future custom Route Handlers remain reserved for
+  calls from the external AI service.
+- `src/proxy.ts` performs optimistic redirects. Pages, database reads, and every
+  Server Action repeat authorization checks because Proxy is not the security
+  boundary.
 
 ## Neon and migrations
 
@@ -61,6 +80,7 @@ npm run db:generate
 npm run db:migrate -- --name <migration-name>
 npm run db:seed
 npm run db:studio
+npm test
 npm run lint
 npm run build
 ```
