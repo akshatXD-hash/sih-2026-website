@@ -57,3 +57,6 @@ next-env.d.ts
 # local Prisma databases (migrations remain tracked)
 /prisma/*.db
 /prisma/*.db-journal
+
+
+#neon
