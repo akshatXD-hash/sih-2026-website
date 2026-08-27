@@ -11,6 +11,7 @@ function baseScheme(overrides: Partial<Scheme> = {}): Scheme {
     slug: "test-scheme",
     name: "Test Scheme",
     provider: "Test Bank",
+    description: "Test eligibility scheme",
     category: "MICRO_FINANCE",
     minAmount: 10_000,
     maxAmount: 140_000,
@@ -98,10 +99,10 @@ describe("matchSchemes", () => {
     expect(matchSchemes(applicant, [scheme])).toHaveLength(0);
   });
 
-  it("includes scheme when applicant has no trade and scheme has trade list", () => {
+  it("does not pass a restricted trade rule when trade is unknown", () => {
     const scheme = baseScheme({ eligibleTrades: ["tailoring"] });
     const applicant = baseApplicant({ trade: null });
-    expect(matchSchemes(applicant, [scheme])).toHaveLength(1);
+    expect(matchSchemes(applicant, [scheme])).toHaveLength(0);
   });
 
   it("excludes scheme when gender is not in eligible list", () => {
@@ -110,10 +111,10 @@ describe("matchSchemes", () => {
     expect(matchSchemes(applicant, [scheme])).toHaveLength(0);
   });
 
-  it("includes scheme when applicant has no gender and scheme has gender list", () => {
+  it("does not pass a restricted gender rule when gender is unknown", () => {
     const scheme = baseScheme({ eligibleGenders: ["FEMALE"] });
     const applicant = baseApplicant({ gender: null });
-    expect(matchSchemes(applicant, [scheme])).toHaveLength(1);
+    expect(matchSchemes(applicant, [scheme])).toHaveLength(0);
   });
 
   it("returns empty array when no schemes match", () => {
@@ -155,6 +156,37 @@ describe("matchSchemes", () => {
     const applicant = baseApplicant();
     const results = matchSchemes(applicant, [lowConc, highConc]);
     expect(results[0].scheme.id).toBe("high-conc");
+  });
+
+  it("accepts Prisma Decimal-like scheme values", () => {
+    const decimal = (value: number) => ({ toNumber: () => value });
+    const scheme = baseScheme({
+      minAmount: decimal(10_000),
+      maxAmount: decimal(140_000),
+      maxAnnualIncome: decimal(300_000),
+      interestRateMin: decimal(7),
+      interestRateMax: decimal(8),
+    });
+
+    expect(matchSchemes(baseApplicant(), [scheme])).toHaveLength(1);
+  });
+
+  it("matches canonical text without casing or whitespace sensitivity", () => {
+    const applicant = baseApplicant({
+      projectCategory: " Micro-Enterprise ",
+      trade: "TAILORING",
+      gender: "female",
+    });
+
+    expect(matchSchemes(applicant, [baseScheme()])).toHaveLength(1);
+  });
+
+  it("rejects invalid applicant money values", () => {
+    expect(() =>
+      matchSchemes(baseApplicant({ requestedAmount: Number.NaN }), [
+        baseScheme(),
+      ]),
+    ).toThrow(/requestedAmount/);
   });
 
   it("matches all 5 seed schemes for a valid micro-finance applicant", () => {

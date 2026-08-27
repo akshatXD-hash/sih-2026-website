@@ -1,39 +1,32 @@
-/**
- * Eligibility matching engine.
- *
- * Pure function — no database, UI, or external dependencies.
- * Accepts an applicant profile and a list of loan schemes, returns only
- * schemes the applicant qualifies for, ranked best-fit first.
- */
+/** Pure, deterministic eligibility and scheme-ranking logic. */
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+export type NumericValue = number | string | { toNumber(): number };
 
 export interface ApplicantProfile {
-  annualIncome: number;
+  annualIncome: NumericValue;
   projectCategory: string;
-  requestedAmount: number;
+  requestedAmount: NumericValue;
   trade?: string | null;
   gender?: string | null;
 }
 
 /**
- * Minimal scheme shape required by the matcher.
- * Accepts Prisma LoanScheme objects via structural typing — no import needed.
+ * Minimal LoanScheme projection used by the matcher. Prisma Decimal values are
+ * accepted directly, so callers do not have to reshape database records.
  */
 export interface Scheme {
   id: string;
   slug: string;
   name: string;
   provider: string;
+  description: string;
   category: string;
-  minAmount: number;
-  maxAmount: number;
-  minAnnualIncome?: number | null;
-  maxAnnualIncome?: number | null;
-  interestRateMin?: number | null;
-  interestRateMax?: number | null;
+  minAmount: NumericValue;
+  maxAmount: NumericValue;
+  minAnnualIncome?: NumericValue | null;
+  maxAnnualIncome?: NumericValue | null;
+  interestRateMin?: NumericValue | null;
+  interestRateMax?: NumericValue | null;
   projectCategories: string[];
   eligibleTrades: string[];
   eligibleGenders: string[];
@@ -42,52 +35,88 @@ export interface Scheme {
 
 export interface MatchResult {
   scheme: Scheme;
-  coverageRatio: number;
+  /** How much of the scheme ceiling the requested amount uses, from 0 to 100. */
+  coveragePercentage: number;
+  /** Difference between the scheme's maximum and minimum offered rates. */
   interestConcession: number;
+  /** Weighted score from 0 to 100. */
   rankScore: number;
 }
 
-// ---------------------------------------------------------------------------
-// Eligibility check
-// ---------------------------------------------------------------------------
+interface RankedCandidate {
+  scheme: Scheme;
+  coveragePercentage: number;
+  interestConcession: number;
+  lowestInterestRate: number;
+}
+
+function toNumber(value: NumericValue, field: string): number {
+  const numeric =
+    typeof value === "object" ? value.toNumber() : Number(value);
+
+  if (!Number.isFinite(numeric) || numeric < 0) {
+    throw new RangeError(`${field} must be a finite, non-negative number`);
+  }
+
+  return numeric;
+}
+
+function canonical(value: string): string {
+  return value.trim().toLocaleLowerCase("en-IN");
+}
+
+function includesCanonical(values: string[], value: string): boolean {
+  const candidate = canonical(value);
+  return values.some((item) => canonical(item) === candidate);
+}
 
 function isEligible(applicant: ApplicantProfile, scheme: Scheme): boolean {
   if (!scheme.isActive) return false;
 
-  // Amount must fall within scheme bounds
-  if (applicant.requestedAmount < scheme.minAmount) return false;
-  if (applicant.requestedAmount > scheme.maxAmount) return false;
+  const requestedAmount = toNumber(
+    applicant.requestedAmount,
+    "requestedAmount",
+  );
+  const annualIncome = toNumber(applicant.annualIncome, "annualIncome");
+  const minAmount = toNumber(scheme.minAmount, "scheme.minAmount");
+  const maxAmount = toNumber(scheme.maxAmount, "scheme.maxAmount");
 
-  // Income must fall within scheme bounds (unbounded if scheme has no limit)
-  const minIncome = scheme.minAnnualIncome ?? 0;
-  const maxIncome = scheme.maxAnnualIncome ?? Infinity;
-  if (applicant.annualIncome < minIncome) return false;
-  if (applicant.annualIncome > maxIncome) return false;
+  if (maxAmount === 0 || minAmount > maxAmount) return false;
+  if (requestedAmount < minAmount || requestedAmount > maxAmount) return false;
 
-  // Project category must be in the scheme's list (if scheme specifies any)
+  if (
+    scheme.minAnnualIncome != null &&
+    annualIncome < toNumber(scheme.minAnnualIncome, "scheme.minAnnualIncome")
+  ) {
+    return false;
+  }
+
+  if (
+    scheme.maxAnnualIncome != null &&
+    annualIncome > toNumber(scheme.maxAnnualIncome, "scheme.maxAnnualIncome")
+  ) {
+    return false;
+  }
+
   if (
     scheme.projectCategories.length > 0 &&
-    !scheme.projectCategories.includes(applicant.projectCategory)
+    !includesCanonical(scheme.projectCategories, applicant.projectCategory)
   ) {
     return false;
   }
 
-  // Trade must match (if scheme specifies eligible trades and applicant has one)
   if (
     scheme.eligibleTrades.length > 0 &&
-    applicant.trade != null &&
-    applicant.trade !== "" &&
-    !scheme.eligibleTrades.includes(applicant.trade)
+    (!applicant.trade ||
+      !includesCanonical(scheme.eligibleTrades, applicant.trade))
   ) {
     return false;
   }
 
-  // Gender must match (if scheme specifies eligible genders and applicant has one)
   if (
     scheme.eligibleGenders.length > 0 &&
-    applicant.gender != null &&
-    applicant.gender !== "" &&
-    !scheme.eligibleGenders.includes(applicant.gender)
+    (!applicant.gender ||
+      !includesCanonical(scheme.eligibleGenders, applicant.gender))
   ) {
     return false;
   }
@@ -95,43 +124,70 @@ function isEligible(applicant: ApplicantProfile, scheme: Scheme): boolean {
   return true;
 }
 
-// ---------------------------------------------------------------------------
-// Ranking
-// ---------------------------------------------------------------------------
-
-function rankScheme(
+function rankCandidate(
   applicant: ApplicantProfile,
   scheme: Scheme,
-): MatchResult {
-  const coverageRatio = applicant.requestedAmount / scheme.maxAmount;
+): RankedCandidate {
+  const requestedAmount = toNumber(
+    applicant.requestedAmount,
+    "requestedAmount",
+  );
+  const maxAmount = toNumber(scheme.maxAmount, "scheme.maxAmount");
+  const minRate =
+    scheme.interestRateMin == null
+      ? null
+      : toNumber(scheme.interestRateMin, "scheme.interestRateMin");
+  const maxRate =
+    scheme.interestRateMax == null
+      ? null
+      : toNumber(scheme.interestRateMax, "scheme.interestRateMax");
+  const lowestInterestRate = minRate ?? maxRate ?? Number.POSITIVE_INFINITY;
+  const highestInterestRate = maxRate ?? minRate ?? 0;
 
-  const maxRate = scheme.interestRateMax ?? scheme.interestRateMin ?? 0;
-  const minRate = scheme.interestRateMin ?? 0;
-  // Concession in percentage points, normalised against a 24pp range
-  const interestConcession = maxRate > 0 ? (maxRate - minRate) / 24 : 0;
-
-  const rankScore = 0.6 * coverageRatio + 0.4 * interestConcession;
-
-  return { scheme, coverageRatio, interestConcession, rankScore };
+  return {
+    scheme,
+    coveragePercentage: Math.min(100, (requestedAmount / maxAmount) * 100),
+    interestConcession: Math.max(0, highestInterestRate - lowestInterestRate),
+    lowestInterestRate,
+  };
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-/**
- * Return eligible schemes ranked best-fit first.
- *
- * @param applicant - The applicant's profile (income, project, amount, trade, gender)
- * @param schemes   - All loan schemes to evaluate (typically all active schemes)
- * @returns         - Ranked list of eligible schemes with scoring metadata
- */
+/** Return hard-eligible schemes ranked by amount fit and rate concession. */
 export function matchSchemes(
   applicant: ApplicantProfile,
   schemes: Scheme[],
 ): MatchResult[] {
-  return schemes
+  const candidates = schemes
     .filter((scheme) => isEligible(applicant, scheme))
-    .map((scheme) => rankScheme(applicant, scheme))
-    .sort((a, b) => b.rankScore - a.rankScore);
+    .map((scheme) => rankCandidate(applicant, scheme));
+  const greatestConcession = Math.max(
+    0,
+    ...candidates.map((candidate) => candidate.interestConcession),
+  );
+
+  return candidates
+    .map((candidate) => ({
+      scheme: candidate.scheme,
+      coveragePercentage: candidate.coveragePercentage,
+      interestConcession: candidate.interestConcession,
+      rankScore:
+        0.6 * candidate.coveragePercentage +
+        0.4 *
+          (greatestConcession === 0
+            ? 0
+            : (candidate.interestConcession / greatestConcession) * 100),
+      lowestInterestRate: candidate.lowestInterestRate,
+    }))
+    .sort(
+      (a, b) =>
+        b.rankScore - a.rankScore ||
+        a.lowestInterestRate - b.lowestInterestRate ||
+        a.scheme.slug.localeCompare(b.scheme.slug),
+    )
+    .map((candidate) => ({
+      scheme: candidate.scheme,
+      coveragePercentage: candidate.coveragePercentage,
+      interestConcession: candidate.interestConcession,
+      rankScore: candidate.rankScore,
+    }));
 }
