@@ -30,9 +30,34 @@ export default async function NewApplicationPage({ searchParams }: { searchParam
         <div><dt className="text-sm text-slate-500">Scheme</dt><dd className="mt-1 font-bold">{application.loanScheme?.name ?? "Not selected"}</dd></div>
         <div><dt className="text-sm text-slate-500">Requested amount</dt><dd className="mt-1 font-bold">{application.requestedAmount ? inr.format(Number(application.requestedAmount.toString())) : "Not entered"}</dd></div>
         <div><dt className="text-sm text-slate-500">Project category</dt><dd className="mt-1 font-bold">{application.projectCategory ?? "Not entered"}</dd></div>
-        <div><dt className="text-sm text-slate-500">Branch</dt><dd className="mt-1 font-bold">{application.channelPartner?.name ?? "To be selected in Phase 3"}</dd></div>
+        <div>
+          <dt className="text-sm text-slate-500">Branch</dt>
+          <dd className="mt-1 font-bold">
+            {application.channelPartner?.name ?? (
+              <span className="text-amber-700 font-medium">Not selected</span>
+            )}
+          </dd>
+        </div>
       </dl>
-      {application.status === ApplicationStatus.DRAFT && <form action={submit} className="mt-6 flex flex-wrap gap-3"><button className="button-primary" type="submit" disabled={!application.loanSchemeId}>Submit application</button><Link className="button-secondary" href={`/schemes?applicationId=${encodeURIComponent(application.id)}`}>Change scheme</Link></form>}
+      {application.status === ApplicationStatus.DRAFT && (
+        <form action={submit} className="mt-6 flex flex-wrap gap-3">
+          <button className="button-primary" type="submit" disabled={!application.loanSchemeId}>
+            Submit application
+          </button>
+          <Link
+            className="button-secondary"
+            href={`/branches?applicationId=${encodeURIComponent(application.id)}`}
+          >
+            {application.channelPartnerId ? "Change branch" : "Select branch"}
+          </Link>
+          <Link
+            className="button-secondary"
+            href={`/schemes?applicationId=${encodeURIComponent(application.id)}`}
+          >
+            Change scheme
+          </Link>
+        </form>
+      )}
     </div>
   );
 }
