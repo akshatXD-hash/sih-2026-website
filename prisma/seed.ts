@@ -1,12 +1,14 @@
 import "dotenv/config";
 
 import { PrismaPg } from "@prisma/adapter-pg";
+import { hash } from "bcryptjs";
 
 import {
   Gender,
   LoanCategory,
   Prisma,
   PrismaClient,
+  UserRole,
 } from "../src/generated/prisma/client";
 
 const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
@@ -195,6 +197,30 @@ async function main() {
       update: scheme,
       create: scheme,
     });
+  }
+
+  const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (adminEmail && adminPassword) {
+    if (adminPassword.length < 12) {
+      throw new Error("SEED_ADMIN_PASSWORD must contain at least 12 characters");
+    }
+    const adminPasswordHash = await hash(adminPassword, 12);
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: {
+        passwordHash: adminPasswordHash,
+        role: UserRole.ADMIN,
+        isActive: true,
+      },
+      create: {
+        email: adminEmail,
+        name: "Development Admin",
+        passwordHash: adminPasswordHash,
+        role: UserRole.ADMIN,
+      },
+    });
+    console.info(`Seeded development admin ${adminEmail}.`);
   }
 
   console.info(`Seeded ${schemes.length} loan schemes.`);
