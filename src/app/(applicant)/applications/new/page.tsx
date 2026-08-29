@@ -41,7 +41,7 @@ export default async function NewApplicationPage({ searchParams }: { searchParam
       </dl>
       {application.status === ApplicationStatus.DRAFT && (
         <form action={submit} className="mt-6 flex flex-wrap gap-3">
-          <button className="button-primary" type="submit" disabled={!application.loanSchemeId}>
+          <button className="button-primary" type="submit" disabled={!application.loanSchemeId || !application.channelPartnerId}>
             Submit application
           </button>
           <Link
