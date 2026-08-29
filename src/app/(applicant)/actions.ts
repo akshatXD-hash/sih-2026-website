@@ -11,6 +11,14 @@ const profileSchema = z.object({
   projectCategory: z.string().trim().min(2).max(80),
   trade: z.string().trim().max(80).optional(),
   gender: z.enum(Gender),
+  suggestedRequestedAmount: z.preprocess(
+    (value) => value === "" || value == null ? undefined : value,
+    z.coerce.number().positive().max(50_000_000).optional(),
+  ),
+  suggestedAnnualIncome: z.preprocess(
+    (value) => value === "" || value == null ? undefined : value,
+    z.coerce.number().nonnegative().max(100_000_000).optional(),
+  ),
 });
 
 const financeSchema = z.object({
@@ -43,6 +51,8 @@ export async function startEligibilityAction(formData: FormData) {
     projectCategory: formData.get("projectCategory"),
     trade: formData.get("trade") || undefined,
     gender: formData.get("gender"),
+    suggestedRequestedAmount: formData.get("suggestedRequestedAmount"),
+    suggestedAnnualIncome: formData.get("suggestedAnnualIncome"),
   });
   if (!parsed.success) throw new Error("Invalid eligibility profile");
 
@@ -52,6 +62,8 @@ export async function startEligibilityAction(formData: FormData) {
       projectCategory: parsed.data.projectCategory,
       trade: parsed.data.trade,
       gender: parsed.data.gender,
+      requestedAmount: parsed.data.suggestedRequestedAmount,
+      annualIncome: parsed.data.suggestedAnnualIncome,
     },
     select: { id: true },
   });
@@ -159,9 +171,20 @@ export async function submitApplicationAction(applicationId: string) {
   if (!application.loanSchemeId) throw new Error("Choose a scheme before submitting");
   if (!application.channelPartnerId) throw new Error("Choose a branch before submitting");
 
-  await prisma.application.update({
-    where: { id: application.id },
-    data: { status: ApplicationStatus.SUBMITTED, submittedAt: new Date() },
+  await prisma.$transaction(async (transaction) => {
+    await transaction.application.update({
+      where: { id: application.id },
+      data: { status: ApplicationStatus.SUBMITTED, submittedAt: new Date() },
+    });
+    await transaction.applicationStatusEvent.create({
+      data: {
+        applicationId: application.id,
+        changedById: user.id,
+        fromStatus: ApplicationStatus.DRAFT,
+        toStatus: ApplicationStatus.SUBMITTED,
+        note: "Application submitted by applicant",
+      },
+    });
   });
   redirect(`/applications/new?applicationId=${encodeURIComponent(application.id)}&submitted=1`);
 }
