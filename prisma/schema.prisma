@@ -55,6 +55,7 @@ enum ApplicationStatus {
 enum DocumentType {
   AADHAAR
   PAN
+  CASTE_CERTIFICATE
   ADDRESS_PROOF
   INCOME_PROOF
   BANK_STATEMENT
@@ -86,9 +87,11 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   applications      Application[]
-  managedPartner    ChannelPartner?  @relation("PartnerManager")
-  uploadedDocuments DocumentUpload[] @relation("DocumentUploader")
-  verifiedDocuments DocumentUpload[] @relation("DocumentVerifier")
+  managedPartner    ChannelPartner?          @relation("PartnerManager")
+  uploadedDocuments DocumentUpload[]         @relation("DocumentUploader")
+  verifiedDocuments DocumentUpload[]         @relation("DocumentVerifier")
+  applicationNotes  ApplicationNote[]        @relation("ApplicationNoteAuthor")
+  statusChanges     ApplicationStatusEvent[] @relation("ApplicationStatusChangedBy")
 
   @@map("users")
 }
@@ -186,10 +189,12 @@ model Application {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  user           User             @relation(fields: [userId], references: [id], onDelete: Restrict)
-  loanScheme     LoanScheme?      @relation(fields: [loanSchemeId], references: [id], onDelete: SetNull)
-  channelPartner ChannelPartner?  @relation(fields: [channelPartnerId], references: [id], onDelete: SetNull)
+  user           User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  loanScheme     LoanScheme?              @relation(fields: [loanSchemeId], references: [id], onDelete: SetNull)
+  channelPartner ChannelPartner?          @relation(fields: [channelPartnerId], references: [id], onDelete: SetNull)
   documents      DocumentUpload[]
+  notes          ApplicationNote[]
+  statusHistory  ApplicationStatusEvent[]
 
   @@index([userId, createdAt])
   @@index([loanSchemeId, status])
@@ -199,22 +204,28 @@ model Application {
 }
 
 model DocumentUpload {
-  id               String         @id @default(cuid())
-  applicationId    String         @map("application_id")
-  uploadedById     String         @map("uploaded_by_id")
-  verifiedById     String?        @map("verified_by_id")
-  type             DocumentType
-  status           DocumentStatus @default(UPLOADED)
-  originalFileName String         @map("original_file_name")
-  storageKey       String         @unique @map("storage_key")
-  mimeType         String         @map("mime_type")
-  sizeBytes        Int            @map("size_bytes")
-  checksum         String?
-  extractedData    Json?          @map("extracted_data")
-  failureReason    String?        @map("failure_reason")
-  verifiedAt       DateTime?      @map("verified_at")
-  createdAt        DateTime       @default(now()) @map("created_at")
-  updatedAt        DateTime       @updatedAt @map("updated_at")
+  id                  String         @id @default(cuid())
+  applicationId       String         @map("application_id")
+  uploadedById        String         @map("uploaded_by_id")
+  verifiedById        String?        @map("verified_by_id")
+  type                DocumentType
+  status              DocumentStatus @default(UPLOADED)
+  originalFileName    String         @map("original_file_name")
+  storageKey          String         @unique @map("storage_key")
+  storageProvider     String         @default("cloudinary") @map("storage_provider")
+  storageVersion      Int?           @map("storage_version")
+  storageFormat       String?        @map("storage_format")
+  storageResourceType String         @default("image") @map("storage_resource_type")
+  storageDeliveryType String         @default("authenticated") @map("storage_delivery_type")
+  mimeType            String         @map("mime_type")
+  sizeBytes           Int            @map("size_bytes")
+  checksum            String?
+  extractedData       Json?          @map("extracted_data")
+  ocrConfirmedAt      DateTime?      @map("ocr_confirmed_at")
+  failureReason       String?        @map("failure_reason")
+  verifiedAt          DateTime?      @map("verified_at")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   uploadedBy  User        @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
@@ -223,4 +234,35 @@ model DocumentUpload {
   @@index([applicationId, type])
   @@index([status, createdAt])
   @@map("document_uploads")
+}
+
+model ApplicationNote {
+  id            String   @id @default(cuid())
+  applicationId String   @map("application_id")
+  authorId      String   @map("author_id")
+  body          String
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  author      User        @relation("ApplicationNoteAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, createdAt])
+  @@map("application_notes")
+}
+
+model ApplicationStatusEvent {
+  id            String             @id @default(cuid())
+  applicationId String             @map("application_id")
+  changedById   String?            @map("changed_by_id")
+  fromStatus    ApplicationStatus? @map("from_status")
+  toStatus      ApplicationStatus  @map("to_status")
+  note          String?
+  createdAt     DateTime           @default(now()) @map("created_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedBy   User?       @relation("ApplicationStatusChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, createdAt])
+  @@index([toStatus, createdAt])
+  @@map("application_status_events")
 }
