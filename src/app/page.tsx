@@ -3,7 +3,7 @@ import Link from "next/link";
 const journeys = [
   ["1", "Tell us about your goal", "A short eligibility wizard captures the facts used by the matcher."],
   ["2", "Compare eligible schemes", "Transparent rules rank relevant micro, term, and education loans."],
-  ["3", "Continue your application", "Choose a branch and submit one traceable application."],
+  ["3", "Apply with confidence", "Choose a branch, upload evidence, estimate EMI, and track officer review."],
 ] as const;
 
 export default function HomePage() {
@@ -33,7 +33,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section className="page-shell py-12 text-sm text-slate-600">Phase 2 foundation · Deterministic matching · External AI extraction boundary</section>
+      <section className="page-shell py-12 text-sm text-slate-600">Deterministic matching · PostGIS branch ranking · Secure documents · Auditable officer review</section>
     </main>
   );
 }

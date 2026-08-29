@@ -44,8 +44,8 @@ The seed never contains a hardcoded password.
 - `/schemes`, `/branches`, and `/applications/new` continue the applicant flow.
 - `/admin` accepts `ADMIN`, `CHANNEL_PARTNER`, and `REVIEWER` roles only.
 - Auth.js uses its required `/api/auth/[...nextauth]` protocol handler. Feature
-  forms use Server Actions; future custom Route Handlers remain reserved for
-  calls from the external AI service.
+  forms use Server Actions. The pre-sanction PDF uses a protected Route Handler
+  because a binary download cannot be returned by a form action.
 - `src/proxy.ts` performs optimistic redirects. Pages, database reads, and every
   Server Action repeat authorization checks because Proxy is not the security
   boundary.
@@ -65,6 +65,49 @@ call the configured `AI_SERVICE_URL`. Every endpoint is represented by a typed,
 Zod-validated method exposed through `src/lib/ai-service.ts`. See
 [`AI_SERVICE_README.md`](./AI_SERVICE_README.md) for endpoint mapping and the
 mandatory human confirmation rules for extracted data.
+
+The applicant UI exposes the complete boundary without putting the FastAPI URL
+or implementation in the browser:
+
+- `/eligibility` can extract structured fields from an English or Hindi
+  description, but requires the applicant to review and confirm them.
+- `/schemes` can explain the deterministic shortlist and simplify each scheme's
+  terms. AI never adds an ineligible scheme or changes a ranking score.
+- `/assistant` provides scheme Q&A with bounded conversation history and a
+  clear warning not to enter personal identifiers.
+- `/applications/new` runs certificate OCR on supported uploaded evidence and
+  requires confirmation before applying extracted income.
+- `/admin` gives authorized officers a manual AI service health check.
+
+All interactive text features use authenticated Server Actions. The
+browser sends only the user's prompt, selected language, or application ID;
+owned application data and eligible candidates are rebuilt on the server.
+
+## Phase 5 documents, PDF, and officer review
+
+- Applicant files are checked by size, MIME signature, and ownership before a
+  server-side Cloudinary upload. The API secret is never sent to the browser.
+- Cloudinary assets use authenticated delivery. Downloads are authorized by the
+  app before it creates a five-minute signed URL.
+- Income and caste documents can be sent through the typed FastAPI OCR client.
+  Applicants explicitly confirm extracted facts; officers separately verify or
+  reject the original document.
+- The application page includes an EMI/moratorium calculator and a provisional
+  pre-sanction PDF download. The PDF clearly states that it is not an approval.
+- `/admin` supports lead filters. `/admin/applications/[applicationId]` supports
+  documents, private notes, controlled status transitions, and audit history.
+
+Configure Cloudinary with the exact **Cloud name** shown in its dashboard. A
+project/display name is not interchangeable with the cloud name:
+
+```env
+CLOUDINARY_CLOUD_NAME="exact-cloud-name"
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+```
+
+Uploads accept PDF, JPEG, PNG, and WebP files up to 5 MB. Keep the API secret in
+server-only environment variables and rotate it immediately if it is exposed.
 
 ## Neon and migrations
 
@@ -97,6 +140,7 @@ npm run db:migrate -- --name <migration-name>
 npm run db:seed
 npm run db:studio
 npm test
+npm run pdf:sample
 npm run lint
 npm run build
 ```

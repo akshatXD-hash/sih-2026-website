@@ -35,6 +35,24 @@ The recommendation endpoint is an explainer only. `src/lib/matching.ts` remains
 the authority for hard eligibility and ranking. Callers must calculate eligible
 candidates first and send only those candidates to the explainer.
 
+## Frontend UI mapping
+
+| Client method | User-facing integration |
+| --- | --- |
+| `health()` | Officer-only diagnostic card on `/admin` |
+| `simplifyTerm()` | “Explain simply with AI” control on each `/schemes` card |
+| `chat()` | Applicant conversation UI on `/assistant` |
+| `extractApplicantIntent()` | Reviewable form prefill on `/eligibility` |
+| `explainRecommendation()` | “Explain matches” panel above the deterministic shortlist |
+| `ocrCertificate()` | “Extract with AI” action for caste/income uploads on `/applications/new` |
+
+Text actions support English (`en`) and Hindi (`hi`) in the UI. Every action
+rechecks authentication and validates its form data. The recommendation action
+accepts only an application ID from the browser, verifies ownership, reruns the
+deterministic matcher, and sends only eligible candidates to FastAPI. Chat
+history is validated and capped before it is sent upstream. Upstream error
+bodies are never returned to the browser.
+
 ## Applicant intent mapping
 
 The deployed endpoint returns these required fields:
@@ -86,6 +104,12 @@ Relevant Prisma destinations are:
 document type, name, optional category, optional annual income, optional expiry,
 verification flag, and confidence. OCR output is evidence for review, not an
 automatic approval. File storage and database updates stay in Next.js.
+
+The applicant application page now calls this client for `INCOME_PROOF` and
+`CASTE_CERTIFICATE` uploads. It stores validated OCR JSON on `DocumentUpload`,
+shows the suggested values, and requires an explicit applicant confirmation
+before applying extracted annual income. An officer still reviews the original
+authenticated document independently.
 
 ## Configuration
 
