@@ -82,11 +82,41 @@ export async function selectSchemeAction(
 
 export async function searchBranchesAction(formData: FormData) {
   await requireApplicant();
-  const district = z.string().trim().min(2).max(80).parse(formData.get("district"));
   const applicationId = z.string().trim().optional().parse(formData.get("applicationId") || undefined);
-  const params = new URLSearchParams({ district });
+  const lat = z.coerce.number().optional().parse(formData.get("lat") || undefined);
+  const lng = z.coerce.number().optional().parse(formData.get("lng") || undefined);
+  const radius = z.coerce.number().positive().optional().parse(formData.get("radius") || undefined);
+  const district = z.string().trim().min(2).max(80).optional().parse(formData.get("district") || undefined);
+
+  const params = new URLSearchParams();
+  if (lat != null && lng != null) {
+    params.set("lat", String(lat));
+    params.set("lng", String(lng));
+  }
+  if (radius) params.set("radius", String(radius));
+  if (district) params.set("district", district);
   if (applicationId) params.set("applicationId", applicationId);
   redirect(`/branches?${params.toString()}`);
+}
+
+export async function selectBranchAction(
+  applicationId: string,
+  branchId: string,
+) {
+  const user = await requireApplicant();
+  const branch = await prisma.channelPartner.findFirst({
+    where: { id: branchId, isActive: true },
+    select: { id: true },
+  });
+  if (!branch) notFound();
+
+  const result = await prisma.application.updateMany({
+    where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT },
+    data: { channelPartnerId: branch.id },
+  });
+  if (result.count !== 1) notFound();
+
+  redirect(`/applications/new?applicationId=${encodeURIComponent(applicationId)}`);
 }
 
 export async function submitApplicationAction(applicationId: string) {
