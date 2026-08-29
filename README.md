@@ -2,8 +2,8 @@
 
 Fullstack application built with Next.js App Router, TypeScript, Tailwind CSS,
 Prisma, and Neon PostgreSQL with PostGIS. AI/ML is an external FastAPI service;
-this repository only stores its structured response and will call or mock it in
-later phases.
+this repository validates and consumes its output through a swappable mock or
+remote adapter.
 
 See [`IMPLEMENTATION_PHASES.md`](./IMPLEMENTATION_PHASES.md) for the
 authoritative project sequence and its review checkpoints.
@@ -49,6 +49,22 @@ The seed never contains a hardcoded password.
 - `src/proxy.ts` performs optimistic redirects. Pages, database reads, and every
   Server Action repeat authorization checks because Proxy is not the security
   boundary.
+
+## Phase 3 branch locator
+
+- `src/lib/branches.ts` runs parameterized PostGIS `ST_DWithin` radius queries.
+- Results are ranked by normalized distance, available quota, and NPA health.
+- Only active, verified partners with a geographic point can be selected.
+- Branch selection uses an authenticated Server Action and checks application
+  ownership; viewing the map never mutates data.
+
+## Phase 4 AI boundary
+
+Set `AI_SERVICE_MODE=mock` for deterministic offline development or `remote` to
+call the configured `AI_SERVICE_URL`. Every endpoint is represented by a typed,
+Zod-validated method exposed through `src/lib/ai-service.ts`. See
+[`AI_SERVICE_README.md`](./AI_SERVICE_README.md) for endpoint mapping and the
+mandatory human confirmation rules for extracted data.
 
 ## Neon and migrations
 

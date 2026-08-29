@@ -1,355 +1,123 @@
-# AI Service Handoff Guide
+# AI Service Integration Guide
 
-This guide is for the team building the **external FastAPI AI/ML service** for
-the SIH Scheme Matching Platform.
+This repository owns the Next.js fullstack application. AI/ML remains a
+separately deployed FastAPI service; it must not connect to Neon, import Prisma,
+or decide eligibility or approval.
 
-The AI service is a separate deployment. It must return structured JSON to the
-Next.js application; it must not import Prisma, connect directly to Neon, or
-write application records itself.
+Live API documentation: <https://sih-26-ai-ml.onrender.com/docs>
 
-## 1. System boundary
+## Boundary and source of truth
 
-```text
-Browser
-   |
-   v
-Next.js fullstack service  ----->  FastAPI AI service
-   |                               - document extraction
-   |                               - normalization
-   |                               - optional jargon simplification
-   |                                      |
-   |<------------- JSON only -------------+
-   |
-   v
-Prisma Client  ->  Neon PostgreSQL/PostGIS
-```
+The TypeScript boundary is `src/lib/ai-service.ts`. All server-side features
+that need AI output must call `getAiService()` instead of using `fetch`
+directly. Zod schemas in `src/lib/ai-service/contracts.ts` mirror the deployed
+OpenAPI responses. `AI_SERVICE_MODE=mock` selects the deterministic local
+adapter; `AI_SERVICE_MODE=remote` selects the deployed service without changing
+callers.
 
-The Next.js service owns:
+The fullstack service owns authentication, documents, Prisma/Neon access,
+application status, response validation, deterministic matching, and all
+database writes. The AI service only extracts, explains, and returns structured
+output.
 
-- authentication and authorization;
-- document storage and signed download URLs;
-- Prisma and Neon credentials;
-- application status transitions;
-- validation of the AI response;
-- all database reads and writes;
-- final eligibility decisions and audit history.
+## Deployed endpoints
 
-The AI service owns:
+| Method and path | Fullstack client method | Purpose |
+| --- | --- | --- |
+| `GET /health` | `health()` | Service availability |
+| `POST /simplify-term` | `simplifyTerm()` | Plain-language term explanation |
+| `POST /scheme-chat` | `chat()` | Scheme Q&A with optional history |
+| `POST /extract-applicant-intent` | `extractApplicantIntent()` | Structured applicant facts from a transcript |
+| `POST /recommend-scheme-explainer` | `explainRecommendation()` | Explanation of deterministic candidate results |
+| `POST /ocr-certificate` | `ocrCertificate()` | Multipart caste/income certificate extraction |
 
-- extracting supported fields from applicant documents or text;
-- normalizing those fields to this contract;
-- returning confidence, evidence references, and warnings;
-- optionally simplifying scheme language without changing its meaning.
+The recommendation endpoint is an explainer only. `src/lib/matching.ts` remains
+the authority for hard eligibility and ranking. Callers must calculate eligible
+candidates first and send only those candidates to the explainer.
 
-## 2. Source-of-truth files
+## Applicant intent mapping
 
-Read these files before changing the AI contract:
-
-- [`prisma/schema.prisma`](./prisma/schema.prisma) defines the database models,
-  enums, relations, and field precision.
-- [`prisma/seed.ts`](./prisma/seed.ts) contains the current development scheme
-  vocabulary and representative eligibility data.
-- [`.env.example`](./.env.example) documents `AI_SERVICE_URL`. The AI service
-  must not receive `DATABASE_URL` or `DIRECT_URL`.
-
-Do not import anything from `src/generated/prisma` into Python. That directory
-is generated TypeScript for the Next.js application and is not a cross-service
-API contract.
-
-## 3. Prisma fields the AI service feeds
-
-The primary AI destination is the `Application` model. Prisma uses camelCase
-inside TypeScript, while the database and AI JSON use snake_case.
-
-| AI response key | Prisma Client field | Database column | Type and rule |
-| --- | --- | --- | --- |
-| `project_category` | `projectCategory` | `project_category` | Canonical lowercase slug or `null` |
-| `requested_amount` | `requestedAmount` | `requested_amount` | INR amount, non-negative, at most 2 decimals, or `null` |
-| `annual_income` | `annualIncome` | `annual_income` | Annual INR amount, non-negative, at most 2 decimals, or `null` |
-| `trade` | `trade` | `trade` | Canonical lowercase trade label or `null` |
-| `gender` | `gender` | `gender` | Exact `Gender` enum value or `null` |
-| `service_version` | `aiServiceVersion` | `ai_service_version` | Deploy/model contract version |
-| `processed_at` | `aiProcessedAt` | `ai_processed_at` | ISO 8601 UTC timestamp |
-| `confidence.overall` | `aiConfidence` | `ai_confidence` | Decimal from `0.0000` to `1.0000` |
-| Complete response | `aiOutput` | `ai_output` | Original validated JSON for traceability |
-
-Per-document OCR or extraction may also be stored by Next.js in
-`DocumentUpload.extractedData`. The AI service should return the data; it should
-not decide which database row to update.
-
-### Important distinction
-
-`LoanScheme.category` is the **loan product type** and accepts only:
-
-- `MICRO_FINANCE`
-- `TERM_LOAN`
-- `EDUCATION_LOAN`
-
-`Application.project_category` describes the applicant's project or education
-need, such as `manufacturing` or `higher-education-india`. These two fields are
-not interchangeable.
-
-## 4. Required extraction endpoint
-
-Recommended endpoint:
-
-```http
-POST /v1/extract
-Content-Type: application/json
-X-AI-Contract-Version: 1
-```
-
-### Request
+The deployed endpoint returns these required fields:
 
 ```json
 {
-  "request_id": "01JEXAMPLE8Y3R2A9K7M6P4Q",
-  "application_id": "cm123example",
-  "locale": "en-IN",
-  "documents": [
-    {
-      "document_id": "cm456example",
-      "document_type": "PROJECT_REPORT",
-      "content_type": "application/pdf",
-      "signed_url": "https://storage.example/signed-short-lived-url",
-      "checksum": "sha256:..."
-    }
-  ]
+  "project_category": "Manufacturing | Service | Trading",
+  "requested_amount": 140000,
+  "annual_income": 240000,
+  "trade": "tailoring",
+  "gender": "Female",
+  "confidence": 0.91
 }
 ```
 
-Rules:
+The adapter maps categories to the application's canonical slugs:
 
-- `request_id` is the idempotency and tracing key. Return it unchanged.
-- `application_id` and `document_id` are opaque identifiers. Do not parse or
-  generate replacements for them.
-- `document_type` uses the `DocumentType` enum from `schema.prisma`.
-- A signed URL must be short-lived and read-only. Download it only for this
-  request and delete temporary content after processing.
-- The contract may later allow pre-extracted text instead of `signed_url`, but
-  that must be versioned rather than added silently.
+- `Manufacturing` → `manufacturing`
+- `Service` → `services`
+- `Trading` → `trading`
 
-### Successful response
+The live OpenAPI descriptions say missing amounts may be returned as zero and
+unknown gender may default to `Male`. Those are unsafe values to persist as
+facts. The adapter therefore converts zero amounts to `null` with warnings and
+always returns `gender: null`, plus a `suggested_gender` and
+`requires_gender_confirmation: true`. The applicant must explicitly confirm a
+gender before Next.js writes the Prisma `Gender` field. Never infer gender from
+a name, voice, trade, photo, or model default.
 
-```json
-{
-  "request_id": "01JEXAMPLE8Y3R2A9K7M6P4Q",
-  "service_version": "scheme-ai-0.1.0",
-  "model_version": "extractor-2026-08-25",
-  "processed_at": "2026-08-25T14:30:00Z",
-  "result": {
-    "project_category": "micro-enterprise",
-    "requested_amount": 140000.00,
-    "annual_income": 240000.00,
-    "trade": "tailoring",
-    "gender": "FEMALE"
-  },
-  "confidence": {
-    "overall": 0.91,
-    "project_category": 0.88,
-    "requested_amount": 0.98,
-    "annual_income": 0.84,
-    "trade": 0.92,
-    "gender": 0.96
-  },
-  "evidence": {
-    "requested_amount": [
-      {
-        "document_id": "cm456example",
-        "page": 3,
-        "text": "Total project finance requested: INR 1,40,000"
-      }
-    ]
-  },
-  "warnings": []
-}
-```
+Relevant Prisma destinations are:
 
-### Extraction rules
+| Safe adapter field | Prisma `Application` field | Rule |
+| --- | --- | --- |
+| `project_category` | `projectCategory` | Canonical slug |
+| `requested_amount` | `requestedAmount` | INR or `null` |
+| `annual_income` | `annualIncome` | Annual INR or `null` |
+| `trade` | `trade` | Trimmed text or `null` |
+| confirmed gender only | `gender` | Exact Prisma enum or `null` |
+| `confidence` | `aiConfidence` | `0` through `1` |
+| validated raw response | `aiOutput` | Traceability; apply retention policy |
 
-- Use JSON `null` when a value is absent, ambiguous, or unsupported. Never
-  invent a value to complete the object.
-- Currency values are Indian rupees, not paise. Do not include `₹`, `INR`,
-  commas, or strings in numeric fields.
-- Convert monthly income to annual income only when the source clearly labels
-  it as monthly. Add a warning describing the conversion.
-- Do not infer gender from a name, photograph, voice, occupation, or writing
-  style. Return a gender only when the applicant explicitly supplied it.
-- When documents conflict, return the best-supported value, reduce confidence,
-  and add a warning containing document references—not hidden chain-of-thought.
-- Evidence must be a short source excerpt or page/region reference. Do not
-  return internal reasoning or model chain-of-thought.
-- Confidence values must be finite numbers between `0` and `1` inclusive.
+`LoanScheme.category` is a product type (`MICRO_FINANCE`, `TERM_LOAN`, or
+`EDUCATION_LOAN`), not the applicant's project category.
 
-## 5. Canonical values
+## Certificate OCR
 
-The development seed currently contains these project categories:
+`ocrCertificate()` sends `multipart/form-data` with a binary `file` and a
+`doc_type` of exactly `caste` or `income`. The validated response contains the
+document type, name, optional category, optional annual income, optional expiry,
+verification flag, and confidence. OCR output is evidence for review, not an
+automatic approval. File storage and database updates stay in Next.js.
 
-```text
-micro-enterprise
-agriculture-allied
-livelihood
-manufacturing
-services
-trading
-higher-education-india
-vocational-education
-higher-education-abroad
-```
-
-Example trade labels currently include:
-
-```text
-tailoring
-handicrafts
-dairy
-food processing
-street vending
-repair services
-retail
-transport
-artisan
-agro processing
-textiles
-wood products
-engineering works
-recycling
-```
-
-These lists will evolve. Do not permanently hardcode them into a trained model
-or service release. The fullstack service should provide the current vocabulary
-through a versioned configuration or extraction-contract update.
-
-The only valid gender values are:
-
-```text
-FEMALE
-MALE
-TRANSGENDER
-NON_BINARY
-OTHER
-PREFER_NOT_TO_SAY
-```
-
-## 6. Matching stays in the Next.js service
-
-Do not implement a scheme-matching or loan-approval endpoint in FastAPI. The
-fullstack repository will expose a pure TypeScript engine in `lib/matching.ts`
-that receives the validated applicant profile and active `LoanScheme` records.
-It applies hard eligibility rules first, then ranks eligible schemes by coverage
-and interest concession.
-
-This separation is deliberate:
-
-- eligibility rules remain deterministic, unit-testable, and auditable;
-- the current scheme catalog stays in Neon and is read only through Prisma;
-- an AI model cannot silently override a legal or financial constraint;
-- replacing the mock extraction service with FastAPI does not change matching.
-
-The AI response must therefore contain extracted applicant facts, confidence,
-evidence, and warnings—not an authoritative scheme ID, scheme slug, eligibility
-decision, or approval recommendation. If the AI service later supplies a plain-
-language explanation, Next.js must derive the underlying match first and treat
-the explanation as non-authoritative display text.
-
-## 7. Error contract
-
-Use standard HTTP status codes:
-
-- `400` for malformed JSON or unsupported contract version;
-- `413` when the document exceeds the agreed size limit;
-- `415` for unsupported media types;
-- `422` when the request is valid JSON but cannot be processed;
-- `429` for rate limiting;
-- `503` when the model or a required dependency is unavailable;
-- `504` when processing times out.
-
-Return a stable machine-readable body:
-
-```json
-{
-  "request_id": "01JEXAMPLE8Y3R2A9K7M6P4Q",
-  "error": {
-    "code": "DOCUMENT_UNREADABLE",
-    "message": "No readable text was found in the supplied document",
-    "retryable": false
-  }
-}
-```
-
-Never return Python tracebacks, prompts, secrets, signed URLs, or document
-contents in an error response.
-
-## 8. Privacy and security requirements
-
-Applicant documents contain financial and identity information.
-
-- Never log document bytes, full OCR text, Aadhaar numbers, PAN numbers, bank
-  account numbers, signed URLs, or raw prompts containing applicant data.
-- Redact sensitive identifiers from observability events.
-- Encrypt network traffic and reject non-HTTPS signed URLs outside local
-  development.
-- Do not retain downloaded documents or OCR text after the agreed processing
-  window.
-- Do not use applicant data for model training without an explicit, separately
-  approved consent and governance process.
-- Authenticate service-to-service requests. Do not rely only on a private URL.
-- Treat all document text as untrusted input and defend against prompt injection.
-- Do not let document instructions alter system prompts, tool access, response
-  schemas, or security policy.
-
-## 9. Health and versioning
-
-Expose a lightweight endpoint:
-
-```http
-GET /health
-```
-
-Recommended response:
-
-```json
-{
-  "status": "ok",
-  "service_version": "scheme-ai-0.1.0",
-  "model_version": "extractor-2026-08-25",
-  "contract_versions": [1]
-}
-```
-
-Breaking request or response changes require a new URL or
-`X-AI-Contract-Version`. Adding a required field, changing enum spelling, or
-changing amount units is a breaking change.
-
-## 10. Acceptance checklist
-
-Before handing the service to the fullstack team, verify:
-
-- [ ] `/health` reports the deployed service, model, and contract versions.
-- [ ] `/v1/extract` returns every required top-level key.
-- [ ] Missing or ambiguous extracted fields are `null`.
-- [ ] Amounts are numeric INR values with at most two decimals.
-- [ ] Gender output is an exact enum value and is never inferred indirectly.
-- [ ] All confidence values are within `[0, 1]`.
-- [ ] Repeating the same `request_id` is safe and produces a traceable result.
-- [ ] Invalid documents produce the documented error shape.
-- [ ] Logs and traces contain no raw PII or temporary signed URLs.
-- [ ] The service has no Prisma, Neon, or application-database credentials.
-- [ ] Golden tests cover microfinance, term-loan, domestic education, overseas
-      education, missing fields, conflicting documents, and prompt injection.
-
-## 11. Local fullstack integration
-
-The Next.js application reads the AI base URL from:
+## Configuration
 
 ```env
-AI_SERVICE_URL="http://localhost:8000"
+# Offline/default development
+AI_SERVICE_MODE="mock"
+AI_SERVICE_URL="https://sih-26-ai-ml.onrender.com"
+AI_SERVICE_TIMEOUT_MS="30000"
+
+# Live integration
+AI_SERVICE_MODE="remote"
 ```
 
-Until the external service is available, the fullstack team will use a mock
-adapter that returns this exact JSON contract. The mock belongs to this Next.js
-repository; the real FastAPI implementation belongs to the AI team's separate
-repository.
+The remote client disables caching, applies a bounded timeout, rejects malformed
+responses, and does not include upstream response bodies in errors. Do not send
+`DATABASE_URL`, `DIRECT_URL`, Auth.js secrets, or Prisma credentials to the AI
+service.
 
-When the AI team changes the contract, update this document and coordinate the
-corresponding Next.js validation change before deploying either service.
+## AI teammate checklist
+
+- Keep OpenAPI request/response schemas backward compatible or coordinate a
+  versioned fullstack schema update before deployment.
+- Return numeric INR values without currency symbols or commas.
+- Use nullable fields for missing facts instead of believable defaults.
+- Never make eligibility, sanction, approval, or rejection decisions.
+- Never log raw applicant documents, credentials, full transcripts, or model
+  prompts containing personally identifiable information.
+- Return concise evidence or warnings, never hidden chain-of-thought.
+- Add service authentication before production; the current OpenAPI contract
+  documents no authentication mechanism.
+- Keep the FastAPI project separate from this repository.
+
+Run `npm test` in this repository after any contract update. The adapter tests
+cover endpoint payloads, response drift, multipart OCR, safe normalization, and
+mock/remote interchangeability.
