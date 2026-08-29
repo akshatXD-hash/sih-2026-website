@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { searchBranchesAction, selectBranchAction } from "@/app/(applicant)/actions";
 import { BranchMap } from "@/components/BranchMap";
 import { BranchSearchForm } from "@/components/BranchSearchForm";
 import { requireApplicant } from "@/lib/auth/guards";
-import { type BranchWithDistance, rankBranches } from "@/lib/branch-ranking";
+import { findDistrictCenter, findNearbyBranches } from "@/lib/branches";
 import { prisma } from "@/lib/prisma";
 
 const INR = new Intl.NumberFormat("en-IN", {
@@ -26,67 +26,32 @@ interface PageProps {
     lat?: string;
     lng?: string;
     radius?: string;
-    selectBranch?: string;
   }>;
 }
 
-interface RawBranchRow {
-  id: string;
-  name: string;
-  type: string;
-  address_line: string | null;
-  district: string | null;
-  state: string | null;
-  pincode: string | null;
-  phone: string | null;
-  fund_quota_amount: unknown;
-  available_fund_amount: unknown;
-  npa_percentage: unknown;
-  distance_metres: number | string;
-  latitude: number | string;
-  longitude: number | string;
-}
-
-function parseNumber(val: unknown): number | null {
-  if (val == null) return null;
-  const num = Number(val);
-  return Number.isFinite(num) ? num : null;
+function parseBoundedNumber(value: string | undefined, min: number, max: number) {
+  if (value == null || value.trim() === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= min && number <= max ? number : null;
 }
 
 export default async function BranchesPage({ searchParams }: PageProps) {
-  await requireApplicant();
-  const { applicationId, district, lat, lng, radius, selectBranch } =
-    await searchParams;
+  const user = await requireApplicant();
+  const { applicationId, district, lat, lng, radius } = await searchParams;
+  const validDistrict = district && district.trim().length >= 2 && district.trim().length <= 80
+    ? district.trim()
+    : undefined;
 
-  // Handle branch selection if triggered via GET query parameter from map popup
-  if (selectBranch && applicationId) {
-    await selectBranchAction(applicationId, selectBranch);
-    redirect(`/applications/new?applicationId=${encodeURIComponent(applicationId)}`);
-  }
-
-  let centerLat = lat ? Number.parseFloat(lat) : null;
-  let centerLng = lng ? Number.parseFloat(lng) : null;
-  const radiusKm = radius ? Number.parseFloat(radius) : DEFAULT_RADIUS_KM;
+  let centerLat = parseBoundedNumber(lat, -90, 90);
+  let centerLng = parseBoundedNumber(lng, -180, 180);
+  const radiusKm = parseBoundedNumber(radius, 1, 500) ?? DEFAULT_RADIUS_KM;
 
   // If lat/lng not supplied, but district is, attempt to resolve district center from DB
-  if ((centerLat == null || centerLng == null || Number.isNaN(centerLat) || Number.isNaN(centerLng)) && district) {
-    try {
-      const match = await prisma.$queryRaw<Array<{ lat: number; lng: number }>>`
-        SELECT
-          ST_Y(location::geometry) AS lat,
-          ST_X(location::geometry) AS lng
-        FROM channel_partners
-        WHERE is_active = true
-          AND location IS NOT NULL
-          AND (district ILIKE ${district} OR name ILIKE ${`%${district}%`})
-        LIMIT 1
-      `;
-      if (match.length > 0) {
-        centerLat = Number(match[0].lat);
-        centerLng = Number(match[0].lng);
-      }
-    } catch {
-      // Fallback to default if query fails
+  if ((centerLat == null || centerLng == null) && validDistrict) {
+    const match = await findDistrictCenter(validDistrict);
+    if (match) {
+      centerLat = match.latitude;
+      centerLng = match.longitude;
     }
   }
 
@@ -96,70 +61,17 @@ export default async function BranchesPage({ searchParams }: PageProps) {
     centerLng = DEFAULT_LNG;
   }
 
-  const radiusMetres = Math.max(1, radiusKm) * 1000;
-
-  // Query nearby branches using PostGIS ST_DWithin and ST_Distance
-  let rawBranches: RawBranchRow[] = [];
-  try {
-    rawBranches = await prisma.$queryRaw<RawBranchRow[]>`
-      SELECT
-        id,
-        name,
-        type::text AS type,
-        address_line,
-        district,
-        state,
-        pincode,
-        phone,
-        fund_quota_amount,
-        available_fund_amount,
-        npa_percentage,
-        ST_Distance(
-          location,
-          ST_SetSRID(ST_MakePoint(${centerLng}, ${centerLat}), 4326)::geography
-        ) AS distance_metres,
-        ST_Y(location::geometry) AS latitude,
-        ST_X(location::geometry) AS longitude
-      FROM channel_partners
-      WHERE is_active = true
-        AND is_verified = true
-        AND location IS NOT NULL
-        AND ST_DWithin(
-          location,
-          ST_SetSRID(ST_MakePoint(${centerLng}, ${centerLat}), 4326)::geography,
-          ${radiusMetres}
-        )
-      ORDER BY distance_metres ASC
-    `;
-  } catch (err) {
-    console.error("PostGIS query error:", err);
-  }
-
-  // Map and score branches using the ranking algorithm
-  const branchesWithDistance: BranchWithDistance[] = rawBranches.map((row) => ({
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    addressLine: row.address_line,
-    district: row.district,
-    state: row.state,
-    pincode: row.pincode,
-    phone: row.phone,
-    distanceMetres: Number(row.distance_metres),
-    fundQuotaAmount: parseNumber(row.fund_quota_amount),
-    availableFundAmount: parseNumber(row.available_fund_amount),
-    npaPercentage: parseNumber(row.npa_percentage),
-    latitude: Number(row.latitude),
-    longitude: Number(row.longitude),
-  }));
-
-  const rankedBranches = rankBranches(branchesWithDistance);
+  const rankedBranches = await findNearbyBranches({
+    latitude: centerLat,
+    longitude: centerLng,
+    radiusKm,
+  });
 
   // If an application ID is provided, verify application exists
   let application = null;
   if (applicationId) {
-    application = await prisma.application.findUnique({
-      where: { id: applicationId },
+    application = await prisma.application.findFirst({
+      where: { id: applicationId, userId: user.id },
       include: { loanScheme: true },
     });
     if (!application) notFound();
@@ -190,7 +102,7 @@ export default async function BranchesPage({ searchParams }: PageProps) {
           <BranchSearchForm
             action={searchBranchesAction}
             applicationId={applicationId}
-            defaultDistrict={district}
+            defaultDistrict={validDistrict}
             defaultLat={lat ? Number.parseFloat(lat) : undefined}
             defaultLng={lng ? Number.parseFloat(lng) : undefined}
             defaultRadius={radius ? Number.parseFloat(radius) : undefined}
@@ -304,7 +216,6 @@ export default async function BranchesPage({ searchParams }: PageProps) {
               branches={rankedBranches}
               centerLat={centerLat}
               centerLng={centerLng}
-              applicationId={applicationId}
             />
             <div className="mt-3 flex items-center justify-between px-2 text-xs text-slate-500">
               <div className="flex items-center gap-3">
@@ -318,7 +229,7 @@ export default async function BranchesPage({ searchParams }: PageProps) {
                   <span className="size-3 rounded-full bg-orange-600 inline-block" /> Fair fit (&lt;40)
                 </span>
               </div>
-              <span>Click any pin to inspect &amp; select</span>
+              <span>Click any pin to inspect</span>
             </div>
           </div>
         </div>

@@ -108,6 +108,8 @@ export function BranchSearchForm({
             name="lat"
             type="number"
             step="any"
+            min={-90}
+            max={90}
             defaultValue={defaultLat ?? ""}
             placeholder="e.g. 18.52"
           />
@@ -120,6 +122,8 @@ export function BranchSearchForm({
             name="lng"
             type="number"
             step="any"
+            min={-180}
+            max={180}
             defaultValue={defaultLng ?? ""}
             placeholder="e.g. 73.85"
           />
