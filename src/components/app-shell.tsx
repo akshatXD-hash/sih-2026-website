@@ -12,7 +12,8 @@ const applicantNav = [
   ["Eligibility", "/eligibility"],
   ["Schemes", "/schemes"],
   ["Branches", "/branches"],
-  ["Application", "/applications/new"],
+  ["AI Assistant", "/assistant"],
+  ["Application & Documents", "/applications/new"],
 ] as const;
 
 export function AppShell({ children, user, mode }: AppShellProps) {
