@@ -33,25 +33,14 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="relative z-10 grid min-h-[calc(100vh-73px)] lg:grid-cols-[260px_1fr]">
-          <aside className="hidden border-r border-white/20 p-8 lg:flex lg:flex-col lg:justify-between">
-            <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#dfff45]">Public credit, decoded</p><p className="mt-5 text-sm leading-6 text-white/55">A single, auditable path from “I need funding” to a review-ready application.</p></div>
-            <div className="space-y-2 text-xs text-white/50"><p>Built for applicants</p><p>Built for officers</p><p>Built for trust</p></div>
-          </aside>
-
-          <div className="relative flex min-h-[760px] flex-col justify-between px-5 py-12 sm:px-8 lg:px-14 lg:py-14">
-            <div className="absolute left-1/2 top-1/2 -z-0 aspect-square w-[min(56vw,590px)] -translate-x-1/2 -translate-y-1/2 border border-white/40">
-              <div className="absolute inset-[12%] rounded-full border border-white/10" />
-              <div className="absolute -inset-[14%] rotate-45 rounded-full border border-white/[0.07]" />
-            </div>
-            <div className="relative z-10 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.18em] text-white/50"><span>Scheme Matching Platform</span><span>India · 2026</span></div>
-            <div className="relative z-10 max-w-6xl py-20">
-              <p className="mb-6 max-w-md text-sm leading-6 text-white/60 sm:ml-[38%]">Government-backed opportunity should feel discoverable—not buried inside policy documents.</p>
-              <h1 className="display-title">Find your<br /><span className="editorial-serif text-[#dfff45]">way in.</span></h1>
-            </div>
-            <div className="relative z-10 flex flex-col items-start justify-between gap-7 border-t border-white/30 pt-6 sm:flex-row sm:items-end">
-              <p className="max-w-xl text-lg leading-7 text-white/75">Discover the right loan scheme, understand the terms, choose a strong branch, and submit one clean application.</p>
-              <Link className="group inline-flex shrink-0 items-center gap-5 rounded-full bg-[#dfff45] px-6 py-4 font-black text-black hover:bg-white" href="/register">Check eligibility <span className="text-xl transition-transform group-hover:translate-x-1">→</span></Link>
+        <div className="page-shell relative z-10 flex min-h-[calc(100vh-73px)] items-center py-20 sm:py-24">
+          <div className="max-w-4xl">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#dfff45]">Public credit, decoded</p>
+            <h1 className="display-title mt-7">Find your<br /><span className="editorial-serif text-[#dfff45]">way in.</span></h1>
+            <p className="mt-8 max-w-xl text-base leading-7 text-white/80 sm:text-lg sm:leading-8">Discover the right loan scheme, understand the terms, choose a strong branch, and submit one clear application—without getting lost in policy documents.</p>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <Link className="group inline-flex items-center gap-5 rounded-full bg-[#dfff45] px-6 py-4 font-black text-black hover:bg-white" href="/register">Check eligibility <span className="text-xl transition-transform group-hover:translate-x-1">→</span></Link>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/55">55 schemes · Explainable matching</span>
             </div>
           </div>
         </div>
