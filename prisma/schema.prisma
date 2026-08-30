@@ -97,30 +97,34 @@ model User {
 }
 
 model LoanScheme {
-  id                  String       @id @default(cuid())
-  slug                String       @unique
-  name                String
-  provider            String
-  category            LoanCategory
-  description         String
-  minAmount           Decimal      @default(0) @map("min_amount") @db.Decimal(14, 2)
-  maxAmount           Decimal      @map("max_amount") @db.Decimal(14, 2)
-  minAnnualIncome     Decimal?     @map("min_annual_income") @db.Decimal(14, 2)
-  maxAnnualIncome     Decimal?     @map("max_annual_income") @db.Decimal(14, 2)
-  interestRateMin     Decimal?     @map("interest_rate_min") @db.Decimal(5, 2)
-  interestRateMax     Decimal?     @map("interest_rate_max") @db.Decimal(5, 2)
-  tenureMonthsMin     Int?         @map("tenure_months_min")
-  tenureMonthsMax     Int?         @map("tenure_months_max")
-  projectCategories   String[]     @default([]) @map("project_categories")
-  eligibleTrades      String[]     @default([]) @map("eligible_trades")
-  eligibleGenders     Gender[]     @default([]) @map("eligible_genders")
-  collateralRequired  Boolean      @default(false) @map("collateral_required")
-  eligibilityCriteria Json?        @map("eligibility_criteria")
-  requiredDocuments   String[]     @default([]) @map("required_documents")
-  sourceUrl           String?      @map("source_url")
-  isActive            Boolean      @default(true) @map("is_active")
-  createdAt           DateTime     @default(now()) @map("created_at")
-  updatedAt           DateTime     @updatedAt @map("updated_at")
+  id                    String       @id @default(cuid())
+  slug                  String       @unique
+  name                  String
+  provider              String
+  category              LoanCategory
+  description           String
+  minAmount             Decimal      @default(0) @map("min_amount") @db.Decimal(14, 2)
+  maxAmount             Decimal      @map("max_amount") @db.Decimal(14, 2)
+  minAnnualIncome       Decimal?     @map("min_annual_income") @db.Decimal(14, 2)
+  maxAnnualIncome       Decimal?     @map("max_annual_income") @db.Decimal(14, 2)
+  interestRateMin       Decimal?     @map("interest_rate_min") @db.Decimal(5, 2)
+  interestRateMax       Decimal?     @map("interest_rate_max") @db.Decimal(5, 2)
+  tenureMonthsMin       Int?         @map("tenure_months_min")
+  tenureMonthsMax       Int?         @map("tenure_months_max")
+  minAge                Int?         @map("min_age")
+  maxAge                Int?         @map("max_age")
+  projectCategories     String[]     @default([]) @map("project_categories")
+  eligibleTrades        String[]     @default([]) @map("eligible_trades")
+  eligibleGenders       Gender[]     @default([]) @map("eligible_genders")
+  eligibleApplicantTags String[]     @default([]) @map("eligible_applicant_tags")
+  collateralRequired    Boolean      @default(false) @map("collateral_required")
+  eligibilityCriteria   Json?        @map("eligibility_criteria")
+  requiredDocuments     String[]     @default([]) @map("required_documents")
+  sourceUrl             String?      @map("source_url")
+  sourceVerifiedAt      DateTime?    @map("source_verified_at")
+  isActive              Boolean      @default(true) @map("is_active")
+  createdAt             DateTime     @default(now()) @map("created_at")
+  updatedAt             DateTime     @updatedAt @map("updated_at")
 
   applications Application[]
 
@@ -179,6 +183,8 @@ model Application {
   annualIncome    Decimal? @map("annual_income") @db.Decimal(14, 2)
   trade           String?
   gender          Gender?
+  age             Int?
+  applicantTags   String[] @default([]) @map("applicant_tags")
 
   aiOutput         Json?     @map("ai_output")
   aiConfidence     Decimal?  @map("ai_confidence") @db.Decimal(5, 4)
