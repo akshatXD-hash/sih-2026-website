@@ -40,8 +40,10 @@ export interface RecommendationActionState {
 }
 
 export interface ChatMessage {
+  id?: string;
   role: "user" | "assistant";
   content: string;
+  createdAt?: string;
 }
 
 export interface ChatActionState {
@@ -208,9 +210,11 @@ export async function explainRecommendationAction(
 
 const chatStateSchema = z.object({
   messages: z.array(z.object({
+    id: z.string().optional(),
     role: z.enum(["user", "assistant"]),
     content: z.string().max(10_000),
-  })).max(20),
+    createdAt: z.string().optional(),
+  })).max(30),
 });
 
 export async function schemeChatAction(
@@ -221,10 +225,10 @@ export async function schemeChatAction(
   const previous = chatStateSchema.safeParse(previousState);
   const parsed = z.object({
     message: z.string().trim().min(1).max(2_000),
-    language: supportedLanguageSchema,
+    language: z.string().trim().optional().default("auto"),
   }).safeParse({
     message: formData.get("message"),
-    language: formData.get("language") || "en",
+    language: formData.get("language") || "auto",
   });
   const messages = previous.success ? previous.data.messages : [];
   if (!parsed.success) return { messages, error: "Enter a question for the scheme assistant." };
@@ -238,12 +242,25 @@ export async function schemeChatAction(
         parts: message.content,
       })),
     });
+
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
     return {
       messages: [
         ...messages,
-        { role: "user", content: parsed.data.message },
-        { role: "assistant", content: result.response },
-      ].slice(-20) as ChatMessage[],
+        {
+          id: `user-${Date.now()}`,
+          role: "user" as const,
+          content: parsed.data.message,
+          createdAt: now,
+        },
+        {
+          id: `assistant-${Date.now() + 1}`,
+          role: "assistant" as const,
+          content: result.response,
+          createdAt: now,
+        },
+      ].slice(-30) as ChatMessage[],
     };
   } catch (error) {
     return { messages, error: safeAiError(error) };

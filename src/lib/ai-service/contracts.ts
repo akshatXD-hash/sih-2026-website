@@ -15,7 +15,7 @@ export const chatHistoryItemSchema = z.object({
 export const schemeChatRequestSchema = z.object({
   message: z.string().trim().min(1).max(10_000),
   history: z.array(chatHistoryItemSchema).max(50).default([]),
-  language: languageSchema,
+  language: z.string().trim().min(2).max(20).default("auto"),
 });
 export const schemeChatResponseSchema = z.object({ response: z.string() });
 
