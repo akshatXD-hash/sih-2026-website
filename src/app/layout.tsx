@@ -3,7 +3,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SIH Scheme Matching Platform",
+  title: "Kaarva | Scheme Matching Platform",
   description: "Discover loan schemes matched to an applicant's needs.",
 };
 

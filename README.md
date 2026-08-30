@@ -1,4 +1,4 @@
-# SIH Scheme Matching Platform
+# Kaarva — SIH Scheme Matching Platform
 
 Fullstack application built with Next.js App Router, TypeScript, Tailwind CSS,
 Prisma, and Neon PostgreSQL with PostGIS. AI/ML is an external FastAPI service;

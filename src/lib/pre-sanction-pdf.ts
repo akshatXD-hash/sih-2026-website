@@ -93,7 +93,7 @@ export async function createPreSanctionPdf(data: PreSanctionPdfData) {
   };
 
   page.drawRectangle({ x: 0, y: PAGE_HEIGHT - 112, width: PAGE_WIDTH, height: 112, color: TEAL });
-  page.drawText("SIH Scheme Matching Platform", { x: MARGIN, y: PAGE_HEIGHT - 58, size: 19, font: bold, color: rgb(1, 1, 1) });
+  page.drawText("Kaarva", { x: MARGIN, y: PAGE_HEIGHT - 58, size: 19, font: bold, color: rgb(1, 1, 1) });
   page.drawText("Pre-Sanction Application Summary", { x: MARGIN, y: PAGE_HEIGHT - 82, size: 13, font: regular, color: rgb(0.88, 1, 0.98) });
   y = PAGE_HEIGHT - 145;
 
@@ -133,7 +133,7 @@ export async function createPreSanctionPdf(data: PreSanctionPdfData) {
   y -= 12;
   page.drawLine({ start: { x: MARGIN, y }, end: { x: PAGE_WIDTH - MARGIN, y }, thickness: 1, color: LIGHT });
   y -= 18;
-  text("Generated electronically by the SIH Scheme Matching Platform. No signature is required for this provisional summary.", { size: 8, color: MUTED });
+  text("Generated electronically by Kaarva. No signature is required for this provisional summary.", { size: 8, color: MUTED });
 
   const pages = document.getPages();
   pages.forEach((pdfPage: PDFPage, index: number) => {
@@ -147,7 +147,7 @@ export async function createPreSanctionPdf(data: PreSanctionPdfData) {
   });
 
   document.setTitle(`Pre-Sanction Summary ${data.referenceNumber}`);
-  document.setAuthor("SIH Scheme Matching Platform");
+  document.setAuthor("Kaarva");
   document.setSubject("Provisional application summary - not a sanction letter");
   document.setCreationDate(data.generatedAt);
   return document.save();

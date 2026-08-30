@@ -18,7 +18,7 @@ export default function HomePage() {
   return (
     <main className="overflow-hidden bg-[#f1f0eb]">
       <section className="relative min-h-screen overflow-hidden bg-black text-white">
-        <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/scheme-setu-hero.webp')" }} />
+        <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/kaarva-hero.webp')" }} />
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/35" />
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/25" />
         <header className="relative z-20 flex items-center justify-between bg-black/20 px-5 py-4 backdrop-blur-[2px] sm:px-8 lg:px-10">

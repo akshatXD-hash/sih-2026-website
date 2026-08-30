@@ -8,7 +8,7 @@ export function BrandMark({ href = "/", inverse = false }: { href?: string; inve
         <span className="absolute left-[15px] top-[7px] h-[7px] w-[11px] rounded-full bg-[#dfff45]" />
         <span className="absolute left-[15px] top-[17px] h-[8px] w-[11px] rounded-full bg-[#dfff45]" />
       </span>
-      <span className="text-lg">SchemeSetu</span>
+      <span className="text-lg">Kaarva</span>
     </Link>
   );
 }
