@@ -11,10 +11,24 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 
 const initialIntentState: IntentActionState = {};
 
+const applicantGroups = [
+  ["SC", "Scheduled Caste"], ["ST", "Scheduled Tribe"], ["OBC", "Other Backward Class"],
+  ["MINORITY", "Notified minority community"], ["STREET_VENDOR", "Street vendor"],
+  ["ARTISAN", "Artisan / handloom weaver"], ["SHG_MEMBER", "Self-help group member"],
+  ["FARMER", "Farmer / allied activity worker"], ["AGRI_ENTREPRENEUR", "Agri entrepreneur"],
+  ["AGRICULTURE_GRADUATE", "Agriculture graduate"], ["AGRICULTURE_GRADUATE_GROUP", "Agriculture-graduate group"],
+  ["URBAN_POOR", "Urban-poor household"], ["URBAN_POOR_GROUP", "Urban-poor enterprise group"],
+  ["SAFAI_KARAMCHARI", "Sanitation worker / dependant"], ["PERSON_WITH_DISABILITY", "Person with disability"],
+] as const;
+
 export function EligibilityWizard() {
   const [intentState, intentAction] = useActionState(
     extractApplicantIntentAction,
     initialIntentState,
+  );
+  const [profileState, profileAction] = useActionState(
+    startEligibilityAction,
+    {},
   );
   const formVersion = intentState.intent
     ? [
@@ -72,7 +86,12 @@ export function EligibilityWizard() {
         )}
       </form>
 
-      <form action={startEligibilityAction} className="panel grid gap-6 sm:grid-cols-2" key={formVersion}>
+      <form action={profileAction} className="panel grid gap-6 sm:grid-cols-2" key={formVersion}>
+        {profileState.error && (
+          <p aria-live="polite" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800 sm:col-span-2">
+            {profileState.error}
+          </p>
+        )}
         <label className="space-y-2 sm:col-span-2">
           <span className="text-sm font-bold text-slate-700">Project category</span>
           <select
@@ -101,6 +120,22 @@ export function EligibilityWizard() {
             placeholder="e.g. tailoring"
           />
         </label>
+        <label className="space-y-2">
+          <span className="text-sm font-bold text-slate-700">Age</span>
+          <input className="field" type="number" name="age" min="18" max="100" required placeholder="e.g. 28" />
+        </label>
+        <fieldset className="space-y-3 sm:col-span-2">
+          <legend className="text-sm font-bold text-slate-700">Applicant groups (select every group that applies)</legend>
+          <p className="text-xs text-slate-500">This is used only for deterministic eligibility checks. Leave all unchecked if none apply.</p>
+          <div className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            {applicantGroups.map(([value, label]) => (
+              <label className="flex items-start gap-2 text-sm text-slate-700" key={value}>
+                <input className="mt-1 h-4 w-4 accent-teal-700" type="checkbox" name="applicantTags" value={value} />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <label className="space-y-2">
           <span className="text-sm font-bold text-slate-700">Gender</span>
           <select className="field" name="gender" required defaultValue={intentState.intent?.suggestedGender ?? "PREFER_NOT_TO_SAY"}>

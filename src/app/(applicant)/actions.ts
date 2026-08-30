@@ -6,11 +6,21 @@ import { z } from "zod";
 import { ApplicationStatus, Gender } from "@/generated/prisma/enums";
 import { requireApplicant } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
+import { matchSchemes } from "@/lib/matching";
+
+const applicantTagSchema = z.enum([
+  "SC", "ST", "OBC", "MINORITY", "STREET_VENDOR", "ARTISAN",
+  "SHG_MEMBER", "FARMER", "AGRI_ENTREPRENEUR", "AGRICULTURE_GRADUATE",
+  "AGRICULTURE_GRADUATE_GROUP", "URBAN_POOR", "URBAN_POOR_GROUP",
+  "SAFAI_KARAMCHARI", "PERSON_WITH_DISABILITY",
+]);
 
 const profileSchema = z.object({
   projectCategory: z.string().trim().min(2).max(80),
   trade: z.string().trim().max(80).optional(),
   gender: z.enum(Gender),
+  age: z.coerce.number().int().min(18).max(100),
+  applicantTags: z.array(applicantTagSchema).max(15),
   suggestedRequestedAmount: z.preprocess(
     (value) => value === "" || value == null ? undefined : value,
     z.coerce.number().positive().max(50_000_000).optional(),
@@ -20,6 +30,10 @@ const profileSchema = z.object({
     z.coerce.number().nonnegative().max(100_000_000).optional(),
   ),
 });
+
+export interface EligibilityActionState {
+  error?: string;
+}
 
 const financeSchema = z.object({
   requestedAmount: z.coerce.number().positive().max(50_000_000),
@@ -45,16 +59,33 @@ const branchSearchSchema = z
     }
   });
 
-export async function startEligibilityAction(formData: FormData) {
+export async function startEligibilityAction(
+  previousStateOrFormData: EligibilityActionState | FormData,
+  submittedFormData?: FormData,
+): Promise<EligibilityActionState> {
   const user = await requireApplicant();
+  // Accept the previous one-argument action shape as well. This prevents an
+  // already-open development tab from crashing while hot reload catches up.
+  const formData = previousStateOrFormData instanceof FormData
+    ? previousStateOrFormData
+    : submittedFormData;
+  if (!formData) return { error: "Refresh the page and submit the eligibility form again." };
   const parsed = profileSchema.safeParse({
     projectCategory: formData.get("projectCategory"),
     trade: formData.get("trade") || undefined,
     gender: formData.get("gender"),
+    age: formData.get("age"),
+    applicantTags: formData.getAll("applicantTags"),
     suggestedRequestedAmount: formData.get("suggestedRequestedAmount"),
     suggestedAnnualIncome: formData.get("suggestedAnnualIncome"),
   });
-  if (!parsed.success) throw new Error("Invalid eligibility profile");
+  if (!parsed.success) {
+    const invalidField = parsed.error.issues[0]?.path[0];
+    const message = invalidField === "age"
+      ? "Enter your age between 18 and 100. If this form was already open, refresh the page first."
+      : "Review the eligibility form and complete every required field.";
+    return { error: message };
+  }
 
   const application = await prisma.application.create({
     data: {
@@ -62,6 +93,8 @@ export async function startEligibilityAction(formData: FormData) {
       projectCategory: parsed.data.projectCategory,
       trade: parsed.data.trade,
       gender: parsed.data.gender,
+      age: parsed.data.age,
+      applicantTags: parsed.data.applicantTags,
       requestedAmount: parsed.data.suggestedRequestedAmount,
       annualIncome: parsed.data.suggestedAnnualIncome,
     },
@@ -96,11 +129,26 @@ export async function selectSchemeAction(
   schemeId: string,
 ) {
   const user = await requireApplicant();
-  const scheme = await prisma.loanScheme.findFirst({
-    where: { id: schemeId, isActive: true },
-    select: { id: true },
-  });
-  if (!scheme) notFound();
+  const [application, scheme] = await Promise.all([
+    prisma.application.findFirst({
+      where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT },
+    }),
+    prisma.loanScheme.findFirst({ where: { id: schemeId, isActive: true } }),
+  ]);
+  if (!application || !scheme) notFound();
+  if (!application.projectCategory || application.requestedAmount == null || application.annualIncome == null) {
+    throw new Error("Complete the eligibility profile before choosing a scheme");
+  }
+  const eligible = matchSchemes({
+    projectCategory: application.projectCategory,
+    requestedAmount: application.requestedAmount,
+    annualIncome: application.annualIncome,
+    trade: application.trade,
+    gender: application.gender,
+    age: application.age,
+    applicantTags: application.applicantTags,
+  }, [scheme]);
+  if (eligible.length !== 1) throw new Error("This scheme is not eligible for the current application");
 
   const result = await prisma.application.updateMany({
     where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT },
