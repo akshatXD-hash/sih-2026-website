@@ -61,7 +61,6 @@ export class MockAiService implements AiService {
 
     return {
       response,
-      follow_up_questions: followUpQuestions,
     };
   }
 

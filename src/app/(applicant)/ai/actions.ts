@@ -43,7 +43,6 @@ export interface ChatMessage {
   id?: string;
   role: "user" | "assistant";
   content: string;
-  followUpQuestions?: string[];
   createdAt?: string;
 }
 
@@ -214,7 +213,6 @@ const chatStateSchema = z.object({
     id: z.string().optional(),
     role: z.enum(["user", "assistant"]),
     content: z.string().max(10_000),
-    followUpQuestions: z.array(z.string()).optional(),
     createdAt: z.string().optional(),
   })).max(30),
 });
@@ -245,12 +243,6 @@ export async function schemeChatAction(
       })),
     });
 
-    const followUps =
-      result.follow_up_questions ??
-      result.followUpQuestions ??
-      result.suggestions ??
-      [];
-
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     return {
@@ -266,7 +258,6 @@ export async function schemeChatAction(
           id: `assistant-${Date.now() + 1}`,
           role: "assistant" as const,
           content: result.response,
-          followUpQuestions: followUps.length > 0 ? followUps : undefined,
           createdAt: now,
         },
       ].slice(-30) as ChatMessage[],

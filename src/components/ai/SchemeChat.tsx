@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 
 import {
   schemeChatAction,
@@ -59,7 +59,9 @@ export function SchemeChat() {
     formData.set("language", "auto");
 
     setInputValue("");
-    formAction(formData);
+    startTransition(() => {
+      formAction(formData);
+    });
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -178,29 +180,6 @@ export function SchemeChat() {
                       {message.createdAt}
                     </span>
                   )}
-                  {!isUser &&
-                    message.followUpQuestions &&
-                    message.followUpQuestions.length > 0 && (
-                      <div className="mt-3.5 w-full space-y-2">
-                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">
-                          Follow-up questions:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {message.followUpQuestions.map((q, qIdx) => (
-                            <button
-                              key={qIdx}
-                              type="button"
-                              disabled={isPending}
-                              onClick={() => handleSendPrompt(q)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-teal-700/30 bg-teal-50/70 px-3.5 py-1.5 text-xs font-bold text-teal-900 transition-all hover:border-teal-800 hover:bg-teal-100 hover:shadow-xs disabled:opacity-50"
-                            >
-                              <span>↳</span>
-                              <span>{q}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                 </div>
                 {isUser && (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-800 text-xs font-bold text-white shadow-xs">
@@ -287,8 +266,7 @@ export function SchemeChat() {
           <li className="flex gap-2.5">
             <span className="font-bold text-teal-800">✓</span>
             <span>
-              <strong>Smart follow-ups</strong>: Click the suggested pills below
-              responses to explore deeper.
+              <strong>Structured explanations</strong>: Get clean, detailed breakdowns of complex scheme terms.
             </span>
           </li>
           <li className="flex gap-2.5">
