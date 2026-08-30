@@ -44,12 +44,6 @@ export function SchemeChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [state.messages, isPending]);
 
-  useEffect(() => {
-    if (state.messages.at(-1)?.role === "assistant") {
-      setInputValue("");
-    }
-  }, [state.messages]);
-
   function handleSendPrompt(promptText: string) {
     const trimmed = promptText.trim();
     if (!trimmed || isPending) return;
