@@ -8,6 +8,8 @@ export interface ApplicantProfile {
   requestedAmount: NumericValue;
   trade?: string | null;
   gender?: string | null;
+  age?: number | null;
+  applicantTags?: string[];
 }
 
 /**
@@ -30,6 +32,10 @@ export interface Scheme {
   projectCategories: string[];
   eligibleTrades: string[];
   eligibleGenders: string[];
+  minAge?: number | null;
+  maxAge?: number | null;
+  eligibleApplicantTags: string[];
+  sourceUrl?: string | null;
   isActive: boolean;
 }
 
@@ -84,6 +90,12 @@ function isEligible(applicant: ApplicantProfile, scheme: Scheme): boolean {
   if (maxAmount === 0 || minAmount > maxAmount) return false;
   if (requestedAmount < minAmount || requestedAmount > maxAmount) return false;
 
+  if (scheme.minAge != null || scheme.maxAge != null) {
+    if (applicant.age == null || !Number.isInteger(applicant.age)) return false;
+    if (scheme.minAge != null && applicant.age < scheme.minAge) return false;
+    if (scheme.maxAge != null && applicant.age > scheme.maxAge) return false;
+  }
+
   if (
     scheme.minAnnualIncome != null &&
     annualIncome < toNumber(scheme.minAnnualIncome, "scheme.minAnnualIncome")
@@ -117,6 +129,17 @@ function isEligible(applicant: ApplicantProfile, scheme: Scheme): boolean {
     scheme.eligibleGenders.length > 0 &&
     (!applicant.gender ||
       !includesCanonical(scheme.eligibleGenders, applicant.gender))
+  ) {
+    return false;
+  }
+
+  if (
+    scheme.eligibleApplicantTags.length > 0 &&
+    !scheme.eligibleApplicantTags.every((requiredTag) =>
+      (applicant.applicantTags ?? []).some(
+        (applicantTag) => canonical(applicantTag) === canonical(requiredTag),
+      ),
+    )
   ) {
     return false;
   }

@@ -22,6 +22,9 @@ function baseScheme(overrides: Partial<Scheme> = {}): Scheme {
     projectCategories: ["micro-enterprise", "agriculture-allied"],
     eligibleTrades: ["tailoring", "dairy"],
     eligibleGenders: ["FEMALE", "TRANSGENDER"],
+    minAge: null,
+    maxAge: null,
+    eligibleApplicantTags: [],
     isActive: true,
     ...overrides,
   };
@@ -34,6 +37,8 @@ function baseApplicant(overrides: Partial<ApplicantProfile> = {}): ApplicantProf
     requestedAmount: 100_000,
     trade: "tailoring",
     gender: "FEMALE",
+    age: 28,
+    applicantTags: [],
     ...overrides,
   };
 }
@@ -158,6 +163,19 @@ describe("matchSchemes", () => {
     expect(results[0].scheme.id).toBe("high-conc");
   });
 
+  it("requires age when a scheme has an age rule", () => {
+    const scheme = baseScheme({ minAge: 18, maxAge: 60 });
+    expect(matchSchemes(baseApplicant({ age: null }), [scheme])).toHaveLength(0);
+    expect(matchSchemes(baseApplicant({ age: 61 }), [scheme])).toHaveLength(0);
+    expect(matchSchemes(baseApplicant({ age: 35 }), [scheme])).toHaveLength(1);
+  });
+
+  it("requires every targeted applicant group", () => {
+    const scheme = baseScheme({ eligibleApplicantTags: ["MINORITY", "ARTISAN"] });
+    expect(matchSchemes(baseApplicant({ applicantTags: ["MINORITY"] }), [scheme])).toHaveLength(0);
+    expect(matchSchemes(baseApplicant({ applicantTags: ["artisan", "minority"] }), [scheme])).toHaveLength(1);
+  });
+
   it("accepts Prisma Decimal-like scheme values", () => {
     const decimal = (value: number) => ({ toNumber: () => value });
     const scheme = baseScheme({
@@ -189,7 +207,7 @@ describe("matchSchemes", () => {
     ).toThrow(/requestedAmount/);
   });
 
-  it("matches all 5 seed schemes for a valid micro-finance applicant", () => {
+  it("matches representative catalogue rules for a valid micro-finance applicant", () => {
     // Simulate the seed data
     const seedSchemes: Scheme[] = [
       baseScheme({
