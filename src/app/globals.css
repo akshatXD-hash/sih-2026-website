@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f1f0eb;
+  --foreground: #11110f;
+  --paper: #faf9f4;
+  --ink: #11110f;
+  --muted: #6d6c65;
+  --line: #cfcec6;
+  --signal: #dfff45;
+  --signal-dark: #b9df16;
 }
 
 @theme inline {
@@ -10,55 +16,73 @@
   --color-foreground: var(--foreground);
   --font-sans: Arial, Helvetica, sans-serif;
   --font-mono: "Courier New", Courier, monospace;
+  --color-slate-50: #f7f6f1;
+  --color-slate-100: #ebeae4;
+  --color-slate-200: #d5d4cc;
+  --color-slate-300: #b8b7af;
+  --color-slate-400: #8d8c84;
+  --color-slate-500: #6d6c65;
+  --color-slate-600: #53524d;
+  --color-slate-700: #3b3a36;
+  --color-slate-800: #282824;
+  --color-slate-900: #191917;
+  --color-slate-950: #11110f;
+  --color-teal-50: #f6ffd8;
+  --color-teal-100: #ecff9c;
+  --color-teal-200: #dfff45;
+  --color-teal-300: #d1f62d;
+  --color-teal-400: #b9df16;
+  --color-teal-500: #94b60c;
+  --color-teal-600: #718b08;
+  --color-teal-700: #4f6205;
+  --color-teal-800: #354303;
+  --color-teal-900: #222b02;
+  --color-teal-950: #151b01;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+* { border-color: var(--line); }
+html { scroll-behavior: smooth; }
+body { background: var(--background); color: var(--foreground); font-family: Arial, Helvetica, sans-serif; }
+::selection { background: var(--signal); color: var(--ink); }
 
-button,
-a,
-input,
-select {
+button, a, input, select, textarea {
   transition: border-color 160ms ease, background-color 160ms ease,
-    color 160ms ease, box-shadow 160ms ease;
+    color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.hero-grid {
-  background-color: #f8fafc;
-  background-image: linear-gradient(rgba(15, 118, 110, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 118, 110, 0.05) 1px, transparent 1px);
-  background-size: 32px 32px;
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
 }
+
+.editorial-grid {
+  background-image: linear-gradient(rgba(255,255,255,.11) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.11) 1px, transparent 1px);
+  background-size: min(12.5vw, 180px) min(12.5vw, 180px);
+}
+
+.paper-grid {
+  background-image: linear-gradient(rgba(17,17,15,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,15,.055) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+.display-title { font-size: clamp(3.4rem, 8.2vw, 8.5rem); font-weight: 800; letter-spacing: -.075em; line-height: .82; }
+.editorial-serif { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 400; }
+.hairline-top { border-top: 1px solid currentColor; }
 
 @layer components {
-  .page-shell {
-    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
-  }
+  .page-shell { @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-10; }
+  .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-black/20 bg-transparent px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.19em] text-black; }
+  .eyebrow::before { content: ""; width: .45rem; height: .45rem; border-radius: 999px; background: var(--signal-dark); }
+  .button-primary { @apply inline-flex min-h-11 items-center justify-center rounded-full border border-black bg-black px-6 py-2.5 text-sm font-black text-white hover:-translate-y-0.5 hover:bg-[#2a2a26] disabled:cursor-not-allowed disabled:opacity-50; box-shadow: 0 5px 0 rgba(17,17,15,.14); }
+  .button-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-full border border-black/25 bg-transparent px-6 py-2.5 text-sm font-black text-black hover:-translate-y-0.5 hover:border-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-50; }
+  .field { @apply min-h-12 w-full rounded-none border-0 border-b border-black/35 bg-transparent px-0 text-black outline-none placeholder:text-black/35 focus:border-black focus:ring-0; }
+  textarea.field { @apply border border-black/25 bg-white/60 px-4; }
+  select.field { @apply pr-8; }
+  .field-error { @apply block text-sm font-bold text-red-700; }
+  .panel { @apply border border-black/15 bg-[#faf9f4] p-6 shadow-none sm:p-7; border-radius: .25rem; }
+  .dark-panel { @apply border border-white/20 bg-black text-white; }
+}
 
-  .eyebrow {
-    @apply inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-teal-700;
-  }
-
-  .button-primary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60;
-  }
-
-  .button-secondary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 font-bold text-slate-700 hover:border-slate-400 hover:bg-slate-50;
-  }
-
-  .field {
-    @apply min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-slate-950 outline-none placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10;
-  }
-
-  .field-error {
-    @apply block text-sm font-medium text-red-700;
-  }
-
-  .panel {
-    @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
-  }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
