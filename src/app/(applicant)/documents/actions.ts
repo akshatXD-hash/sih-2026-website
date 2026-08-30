@@ -137,7 +137,7 @@ export async function processDocumentOcrAction(applicationId: string, documentId
       where: { id: document.id },
       data: {
         status: DocumentStatus.PROCESSED,
-        extractedData: JSON.parse(JSON.stringify(result)),
+        extractedData: structuredClone(result),
         failureReason: null,
       },
     });

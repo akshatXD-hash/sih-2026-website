@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import { selectSchemeAction } from "@/app/(applicant)/actions";
@@ -36,16 +37,17 @@ export default async function SchemesPage({
   const user = await requireApplicant();
   const { applicationId, category, q, sort, page } = await searchParams;
 
-  const schemes = await prisma.loanScheme.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-  });
-
-  const application = applicationId
-    ? await prisma.application.findFirst({
-        where: { id: applicationId, userId: user.id },
-      })
-    : null;
+  const [schemes, application] = await Promise.all([
+    prisma.loanScheme.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+    }),
+    applicationId
+      ? prisma.application.findFirst({
+          where: { id: applicationId, userId: user.id },
+        })
+      : null,
+  ]);
 
   if (applicationId && !application) notFound();
 
@@ -110,7 +112,9 @@ export default async function SchemesPage({
         <RecommendationExplainer applicationId={application.id} />
       )}
 
-      <SchemeFilters hasMatches={matches.length > 0} />
+      <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-slate-100 mt-6" />}>
+        <SchemeFilters hasMatches={matches.length > 0} />
+      </Suspense>
 
       {paginated.items.length === 0 ? (
         <div className="panel mt-8 text-center py-12">
@@ -197,12 +201,14 @@ export default async function SchemesPage({
         </div>
       )}
 
-      <Pagination
-        currentPage={paginated.currentPage}
-        totalPages={paginated.totalPages}
-        totalCount={paginated.totalCount}
-        pageSize={paginated.pageSize}
-      />
+      <Suspense fallback={null}>
+        <Pagination
+          currentPage={paginated.currentPage}
+          totalPages={paginated.totalPages}
+          totalCount={paginated.totalCount}
+          pageSize={paginated.pageSize}
+        />
+      </Suspense>
     </div>
   );
 }

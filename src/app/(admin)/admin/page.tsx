@@ -53,8 +53,8 @@ export default async function AdminDashboardPage({
       <AiHealthCard />
 
       <form className="panel mt-7 grid gap-3 sm:grid-cols-[1fr_220px_auto]" method="GET">
-        <input className="field" name="q" defaultValue={query} placeholder="Reference, applicant, or email" />
-        <select className="field" name="status" defaultValue={status ?? ""}>
+        <input className="field" name="q" defaultValue={query} placeholder="Reference, applicant, or email" aria-label="Search by reference, applicant, or email" />
+        <select className="field" name="status" defaultValue={status ?? ""} aria-label="Filter by application status">
           <option value="">All statuses</option>
           {statuses.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
         </select>

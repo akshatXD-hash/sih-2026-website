@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import {
   schemeChatAction,
@@ -120,13 +121,13 @@ export function SchemeChat() {
                   Suggested topics to explore:
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {QUICK_STARTERS.map((item, idx) => (
+                  {QUICK_STARTERS.map((item) => (
                     <button
-                      key={idx}
+                      key={item.title}
                       type="button"
                       disabled={isPending}
                       onClick={() => handleSendPrompt(item.prompt)}
-                      className="group flex flex-col items-start rounded-xl border border-black/10 bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:border-black hover:shadow-sm disabled:opacity-50"
+                      className="group flex flex-col items-start rounded-xl border border-black/10 bg-white p-4 text-left transition-colors duration-150 hover:-translate-y-0.5 hover:border-black hover:shadow-sm disabled:opacity-50"
                     >
                       <span className="text-xl mb-2">{item.icon}</span>
                       <span className="text-sm font-bold text-slate-950 group-hover:text-teal-800">
@@ -141,11 +142,12 @@ export function SchemeChat() {
               </div>
             </div>
           )}
-          {state.messages.map((message, index) => {
+          {state.messages.map((message) => {
             const isUser = message.role === "user";
+            const messageKey = message.id || `${message.role}-${message.createdAt ?? message.content.slice(0, 15)}`;
             return (
               <div
-                key={message.id ?? `${message.role}-${index}`}
+                key={messageKey}
                 className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}
               >
                 {!isUser && (
@@ -158,9 +160,9 @@ export function SchemeChat() {
                   className={`flex flex-col ${isUser ? "items-end" : "items-start"} max-w-[88%] sm:max-w-[80%]`}
                 >
                   <div
-                    className={`rounded-2xl px-5 py-3.5 text-sm leading-relaxed shadow-xs ${isUser
-                        ? "rounded-tr-xs bg-black text-white font-medium"
-                        : "rounded-tl-xs border border-black/10 bg-white text-slate-900"
+                    className={`rounded-2xl px-5 py-4 text-sm leading-relaxed ${isUser
+                        ? "rounded-tr-xs bg-slate-900 text-white font-medium shadow-xs"
+                        : "rounded-tl-xs border border-black/10 bg-slate-50/80 text-slate-900 shadow-xs"
                       }`}
                   >
                     {isUser ? (
@@ -184,14 +186,16 @@ export function SchemeChat() {
             );
           })}
           {isPending && (
-            <div className="flex gap-3 justify-start items-start">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-xs font-bold text-white shadow-xs">
+            <div className="flex gap-3 items-start">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-xs font-bold text-white">
                 AI
               </div>
-              <div className="rounded-2xl rounded-tl-xs border border-black/10 bg-white px-5 py-3.5 shadow-xs">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                  <span className="inline-block h-2 w-2 rounded-full bg-teal-600 animate-ping" />
-                  <span>Thinking and preparing structured response...</span>
+              <div className="rounded-2xl rounded-tl-xs border border-black/10 bg-slate-50 px-5 py-4 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-teal-700 [animation-delay:-0.3s]" />
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-teal-700 [animation-delay:-0.15s]" />
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-teal-700" />
+                  <span className="ml-2 text-xs font-bold text-slate-500">Thinking...</span>
                 </div>
               </div>
             </div>
@@ -219,6 +223,7 @@ export function SchemeChat() {
               disabled={isPending}
               maxLength={2_000}
               required
+              aria-label="Ask a question about schemes"
               placeholder="Ask a question in any language (English, हिंदी, मराठी, etc.)..."
               autoComplete="off"
               className="flex-1 rounded-xl border border-black/20 bg-slate-50/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-black focus:bg-white focus:outline-none"
@@ -227,7 +232,7 @@ export function SchemeChat() {
             <button
               type="submit"
               disabled={isPending || !inputValue.trim()}
-              className="inline-flex h-11 min-w-[90px] items-center justify-center rounded-xl bg-black px-5 text-xs font-black text-white transition-all hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex h-11 min-w-[90px] items-center justify-center rounded-xl bg-black px-5 text-xs font-black text-white transition-colors duration-150 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isPending ? "..." : "Send →"}
             </button>
@@ -285,12 +290,12 @@ export function SchemeChat() {
             Complete the 2-step profile wizard to get deterministic scheme
             matches.
           </p>
-          <a
+          <Link
             href="/eligibility"
             className="mt-3 inline-block font-black text-teal-800 hover:underline"
           >
             Go to Eligibility Wizard →
-          </a>
+          </Link>
         </div>
       </aside>
     </div>

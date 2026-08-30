@@ -63,6 +63,7 @@ export function EligibilityWizard() {
           minLength={10}
           maxLength={5_000}
           required
+          aria-label="Describe your loan and project requirement in your own words"
           placeholder="Example: I run a tailoring service and need ₹1,20,000. My annual household income is ₹2,40,000."
         />
         <div className="mt-4 flex flex-wrap items-center gap-3">

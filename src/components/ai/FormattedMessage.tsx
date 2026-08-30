@@ -20,8 +20,8 @@ export function FormattedMessage({ content }: FormattedMessageProps) {
           key={`list-${keyCounter++}`}
           className="my-2.5 ml-4 list-decimal space-y-1.5 pl-2 text-sm leading-6 text-slate-800"
         >
-          {currentList.items.map((item, idx) => (
-            <li key={idx}>{renderInline(item)}</li>
+          {currentList.items.map((item) => (
+            <li key={item}>{renderInline(item)}</li>
           ))}
         </ol>
       ) : (
@@ -29,8 +29,8 @@ export function FormattedMessage({ content }: FormattedMessageProps) {
           key={`list-${keyCounter++}`}
           className="my-2.5 ml-4 list-disc space-y-1.5 pl-2 text-sm leading-6 text-slate-800"
         >
-          {currentList.items.map((item, idx) => (
-            <li key={idx}>{renderInline(item)}</li>
+          {currentList.items.map((item) => (
+            <li key={item}>{renderInline(item)}</li>
           ))}
         </ul>
       ),
@@ -121,18 +121,18 @@ function renderInline(text: string): React.ReactNode {
   const regex = /(\*\*.*?\*\*|`.*?`)/g;
   const segments = text.split(regex);
 
-  segments.forEach((seg, idx) => {
+  segments.forEach((seg) => {
     if (!seg) return;
     if (seg.startsWith("**") && seg.endsWith("**")) {
       parts.push(
-        <strong key={idx} className="font-bold text-slate-950">
+        <strong key={seg} className="font-bold text-slate-950">
           {seg.slice(2, -2)}
         </strong>,
       );
     } else if (seg.startsWith("`") && seg.endsWith("`")) {
       parts.push(
         <code
-          key={idx}
+          key={seg}
           className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-900 border border-slate-200"
         >
           {seg.slice(1, -1)}

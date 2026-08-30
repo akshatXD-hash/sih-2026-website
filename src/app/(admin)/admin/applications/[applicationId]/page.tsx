@@ -68,11 +68,11 @@ export default async function AdminApplicationPage({
           <p className="mt-2 text-sm text-slate-600">Current: <strong>{application.status.replaceAll("_", " ")}</strong></p>
           {transitions.length ? (
             <form action={statusAction} className="mt-5 space-y-3">
-              <select className="field" name="status" required defaultValue="">
+              <select className="field" name="status" required defaultValue="" aria-label="Next application status">
                 <option value="" disabled>Choose next status</option>
                 {transitions.map((status) => <option value={status} key={status}>{status.replaceAll("_", " ")}</option>)}
               </select>
-              <textarea className="field min-h-24 py-3" name="note" maxLength={2000} placeholder="Reason or decision note" />
+              <textarea className="field min-h-24 py-3" name="note" maxLength={2000} placeholder="Reason or decision note" aria-label="Reason or decision note" />
               <SubmitButton pendingLabel="Updating...">Update status</SubmitButton>
             </form>
           ) : <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-500">No further officer transition is available.</p>}
@@ -92,7 +92,7 @@ export default async function AdminApplicationPage({
                   {document.failureReason && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{document.failureReason}</p>}
                   {document.status !== DocumentStatus.VERIFIED && document.status !== DocumentStatus.REJECTED && (
                     <form action={review} className="mt-4 flex flex-wrap gap-2">
-                      <input className="field min-w-64 flex-1" name="reason" maxLength={500} placeholder="Reason required when rejecting" />
+                      <input className="field min-w-64 flex-1" name="reason" maxLength={500} placeholder="Reason required when rejecting" aria-label="Rejection reason" />
                       <button className="button-primary" name="decision" value="verify" type="submit">Verify</button>
                       <button className="button-secondary border-red-200 text-red-700" name="decision" value="reject" type="submit">Reject</button>
                     </form>
@@ -108,7 +108,7 @@ export default async function AdminApplicationPage({
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="panel">
           <h2 className="text-xl font-bold text-slate-950">Officer notes</h2>
-          <form action={noteAction} className="mt-4 space-y-3"><textarea className="field min-h-28 py-3" name="body" minLength={2} maxLength={2000} required placeholder="Add a private review note" /><SubmitButton pendingLabel="Saving...">Add note</SubmitButton></form>
+          <form action={noteAction} className="mt-4 space-y-3"><textarea className="field min-h-28 py-3" name="body" minLength={2} maxLength={2000} required placeholder="Add a private review note" aria-label="Private review note" /><SubmitButton pendingLabel="Saving...">Add note</SubmitButton></form>
           <div className="mt-5 space-y-3">{application.notes.map((note) => <article className="rounded-xl bg-slate-50 p-4" key={note.id}><p className="text-sm text-slate-800">{note.body}</p><p className="mt-2 text-xs text-slate-500">{note.author.name} · {note.createdAt.toLocaleString("en-IN")}</p></article>)}</div>
         </section>
         <section className="panel">

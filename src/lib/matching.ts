@@ -180,13 +180,18 @@ export function matchSchemes(
   applicant: ApplicantProfile,
   schemes: Scheme[],
 ): MatchResult[] {
-  const candidates = schemes
-    .filter((scheme) => isEligible(applicant, scheme))
-    .map((scheme) => rankCandidate(applicant, scheme));
-  const greatestConcession = Math.max(
-    0,
-    ...candidates.map((candidate) => candidate.interestConcession),
-  );
+  const candidates: ReturnType<typeof rankCandidate>[] = [];
+  let greatestConcession = 0;
+
+  for (const scheme of schemes) {
+    if (isEligible(applicant, scheme)) {
+      const candidate = rankCandidate(applicant, scheme);
+      candidates.push(candidate);
+      if (candidate.interestConcession > greatestConcession) {
+        greatestConcession = candidate.interestConcession;
+      }
+    }
+  }
 
   return candidates
     .map((candidate) => ({
