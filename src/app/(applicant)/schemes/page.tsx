@@ -25,6 +25,8 @@ export default async function SchemesPage({ searchParams }: { searchParams: Prom
         annualIncome: application.annualIncome,
         trade: application.trade,
         gender: application.gender,
+        age: application.age,
+        applicantTags: application.applicantTags,
       }, schemes)
     : [];
   const displayedSchemes = matches.length > 0 ? matches.map((match) => match.scheme) : schemes;
@@ -45,7 +47,8 @@ export default async function SchemesPage({ searchParams }: { searchParams: Prom
             <article className="panel flex flex-col" key={scheme.id}>
               <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wider text-teal-700">{scheme.category.replaceAll("_", " ")}</p><h2 className="mt-2 text-xl font-bold text-slate-950">{scheme.name}</h2><p className="mt-1 text-sm text-slate-500">{scheme.provider}</p></div>{match && <span className="rounded-lg bg-teal-50 px-3 py-1 text-sm font-bold text-teal-800">Fit {match.rankScore.toFixed(0)}</span>}</div>
               <p className="mt-4 flex-1 text-sm leading-6 text-slate-600">{scheme.description}</p>
-              <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 text-sm"><div><p className="text-slate-500">Maximum</p><p className="font-bold text-slate-900">{inr.format(Number(scheme.maxAmount.toString()))}</p></div><div><p className="text-slate-500">Rate range</p><p className="font-bold text-slate-900">{scheme.interestRateMin?.toString() ?? "—"}%–{scheme.interestRateMax?.toString() ?? "—"}%</p></div></div>
+              <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 text-sm"><div><p className="text-slate-500">Maximum</p><p className="font-bold text-slate-900">{inr.format(Number(scheme.maxAmount.toString()))}</p></div><div><p className="text-slate-500">Indicative rate</p><p className="font-bold text-slate-900">{scheme.interestRateMin == null && scheme.interestRateMax == null ? "Set by lender" : scheme.interestRateMin?.toString() === "0" && scheme.interestRateMax?.toString() === "0" ? "Lender rate + subsidy" : `${scheme.interestRateMin?.toString() ?? scheme.interestRateMax?.toString()}%${scheme.interestRateMax && scheme.interestRateMax.toString() !== scheme.interestRateMin?.toString() ? `–${scheme.interestRateMax.toString()}%` : ""}`}</p></div></div>
+              {scheme.sourceUrl && <a className="mt-4 text-sm font-bold text-teal-700 hover:underline" href={scheme.sourceUrl} target="_blank" rel="noreferrer">Official scheme source ↗</a>}
               <TermSimplifier text={`${scheme.name}. ${scheme.description}. Interest rate ${scheme.interestRateMin?.toString() ?? "not stated"} to ${scheme.interestRateMax?.toString() ?? "not stated"} percent.`} />
               {action && <form action={action} className="mt-5"><button className="button-primary w-full" type="submit">Choose this scheme</button></form>}
             </article>
