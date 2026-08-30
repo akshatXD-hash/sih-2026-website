@@ -50,8 +50,10 @@ function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
 
 export async function createPreSanctionPdf(data: PreSanctionPdfData) {
   const document = await PDFDocument.create();
-  const regular = await document.embedFont(StandardFonts.Helvetica);
-  const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  const [regular, bold] = await Promise.all([
+    document.embedFont(StandardFonts.Helvetica),
+    document.embedFont(StandardFonts.HelveticaBold),
+  ]);
   let page = document.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - MARGIN;
 
