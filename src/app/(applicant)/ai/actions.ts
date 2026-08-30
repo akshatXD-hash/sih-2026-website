@@ -149,6 +149,8 @@ export async function explainRecommendationAction(
         annualIncome: true,
         trade: true,
         gender: true,
+        age: true,
+        applicantTags: true,
       },
     }),
     prisma.loanScheme.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
@@ -164,6 +166,8 @@ export async function explainRecommendationAction(
     annualIncome: application.annualIncome,
     trade: application.trade,
     gender: application.gender,
+    age: application.age,
+    applicantTags: application.applicantTags,
   }, schemes).slice(0, 50);
   if (matches.length === 0) {
     return { error: "There are no eligible schemes for the AI to explain." };
