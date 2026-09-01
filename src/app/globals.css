@@ -9,12 +9,14 @@
   --line: #cfcec6;
   --signal: #dfff45;
   --signal-dark: #b9df16;
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: Arial, Helvetica, sans-serif;
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: "Courier New", Courier, monospace;
   --color-slate-50: #f7f6f1;
   --color-slate-100: #ebeae4;
