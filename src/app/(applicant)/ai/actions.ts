@@ -82,10 +82,10 @@ export async function extractApplicantIntentAction(
   await requireApplicant();
   const parsed = z.object({
     transcript: z.string().trim().min(10).max(5_000),
-    language: supportedLanguageSchema,
+    language: z.string().trim().min(2).max(20).default("auto"),
   }).safeParse({
     transcript: formData.get("transcript"),
-    language: formData.get("language") || "en",
+    language: formData.get("language") || "auto",
   });
   if (!parsed.success) {
     return { ...previousState, error: "Describe your funding need in at least 10 characters." };

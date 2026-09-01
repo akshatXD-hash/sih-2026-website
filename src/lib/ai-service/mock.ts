@@ -68,18 +68,18 @@ export class MockAiService implements AiService {
   async extractApplicantIntent(input: Parameters<AiService["extractApplicantIntent"]>[0]) {
     const request = extractApplicantIntentRequestSchema.parse(input);
     const lower = request.transcript.toLowerCase();
-    const projectCategory = lower.includes("manufactur")
+    const projectCategory = (lower.includes("manufactur") || lower.includes("कारखाना") || lower.includes("उत्पादन"))
       ? "Manufacturing" as const
-      : lower.includes("service")
+      : (lower.includes("service") || lower.includes("सेवा") || lower.includes("tailor") || lower.includes("सिलाई") || lower.includes("repair"))
         ? "Service" as const
         : "Trading" as const;
-    const gender = lower.includes("female")
+    const gender = (lower.includes("female") || lower.includes("mahila") || lower.includes("महिला") || lower.includes("woman") || lower.includes("women"))
       ? "Female"
       : lower.includes("non-binary")
         ? "Non-binary"
         : lower.includes("transgender")
           ? "Transgender"
-          : lower.includes("male")
+          : (lower.includes("male") || lower.includes("purush") || lower.includes("पुरुष") || lower.includes("man"))
             ? "Male"
             : "Prefer not to say";
 
@@ -87,9 +87,9 @@ export class MockAiService implements AiService {
       project_category: projectCategory,
       requested_amount: extractAmount(request.transcript),
       annual_income: 0,
-      trade: "",
+      trade: lower.includes("tailor") || lower.includes("सिलाई") ? "tailoring" : "",
       gender,
-      confidence: 0.5,
+      confidence: 0.85,
     });
   }
 

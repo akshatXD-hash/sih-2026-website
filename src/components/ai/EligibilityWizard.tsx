@@ -44,18 +44,21 @@ export function EligibilityWizard() {
   return (
     <div className="space-y-6">
       <form action={intentAction} className="panel border-violet-200 bg-violet-50/40">
+        <input type="hidden" name="language" value="auto" />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">AI-assisted intake</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">AI-assisted intake</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-600 animate-pulse" />
+                Auto Multi-lingual
+              </span>
+            </div>
             <h2 className="mt-2 text-xl font-bold text-slate-950">Describe your need in your own words</h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-              The assistant can prefill the form. You review every value before anything is saved.
+              Enter your details in any language (English, हिंदी, मराठी, Hinglish, etc.). The AI automatically identifies the language and prefills the form for your review.
             </p>
           </div>
-          <select className="field w-auto min-w-36" name="language" aria-label="Assistant language" defaultValue="en">
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-          </select>
         </div>
         <textarea
           className="field mt-4 min-h-32 py-3"
@@ -64,7 +67,7 @@ export function EligibilityWizard() {
           maxLength={5_000}
           required
           aria-label="Describe your loan and project requirement in your own words"
-          placeholder="Example: I run a tailoring service and need ₹1,20,000. My annual household income is ₹2,40,000."
+          placeholder="Example: I run a tailoring service and need ₹1,20,000. My annual household income is ₹2,40,000. (या हिंदी में: मेरी सिलाई की दुकान है और मुझे ₹1,20,000 की जरूरत है...)"
         />
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <SubmitButton pendingLabel="Analysing...">Prefill with AI</SubmitButton>
