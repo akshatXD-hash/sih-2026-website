@@ -44,6 +44,7 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   createdAt?: string;
+  suggestedQuestions?: string[];
 }
 
 export interface ChatActionState {
@@ -81,10 +82,10 @@ export async function extractApplicantIntentAction(
   await requireApplicant();
   const parsed = z.object({
     transcript: z.string().trim().min(10).max(5_000),
-    language: supportedLanguageSchema,
+    language: z.string().trim().min(2).max(20).default("auto"),
   }).safeParse({
     transcript: formData.get("transcript"),
-    language: formData.get("language") || "en",
+    language: formData.get("language") || "auto",
   });
   if (!parsed.success) {
     return { ...previousState, error: "Describe your funding need in at least 10 characters." };
@@ -214,6 +215,7 @@ const chatStateSchema = z.object({
     role: z.enum(["user", "assistant"]),
     content: z.string().max(10_000),
     createdAt: z.string().optional(),
+    suggestedQuestions: z.array(z.string()).optional(),
   })).max(30),
 });
 
@@ -259,6 +261,7 @@ export async function schemeChatAction(
           role: "assistant" as const,
           content: result.response,
           createdAt: now,
+          suggestedQuestions: result.suggested_questions ?? [],
         },
       ].slice(-30) as ChatMessage[],
     };

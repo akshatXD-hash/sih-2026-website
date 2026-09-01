@@ -68,13 +68,19 @@ describe("RemoteAiService", () => {
     expect(result.warnings).toHaveLength(2);
   });
 
-  it("uses the documented chat and recommendation explainer paths", async () => {
+  it("uses the documented chat and recommendation explainer paths and receives suggested questions", async () => {
     const paths: string[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       paths.push(new URL(url).pathname);
       return url.endsWith("/scheme-chat")
-        ? jsonResponse({ response: "Answer" })
+        ? jsonResponse({
+            response: "Answer",
+            suggested_questions: [
+              "What is the eligibility for this scheme?",
+              "What documents are required?",
+            ],
+          })
         : jsonResponse({ top_scheme: "Scheme A", explanation: "Best fit", runner_up_note: "Scheme B" });
     });
     const service = new RemoteAiService({
@@ -82,7 +88,13 @@ describe("RemoteAiService", () => {
       fetchImpl: fetchMock as typeof fetch,
     });
 
-    await service.chat({ message: "What is a term loan?" });
+    const chatResult = await service.chat({ message: "What is a term loan?" });
+    expect(chatResult.response).toBe("Answer");
+    expect(chatResult.suggested_questions).toEqual([
+      "What is the eligibility for this scheme?",
+      "What documents are required?",
+    ]);
+
     await service.explainRecommendation({
       applicant: {
         project_category: "services",
@@ -100,6 +112,18 @@ describe("RemoteAiService", () => {
     });
 
     expect(paths).toEqual(["/scheme-chat", "/recommend-scheme-explainer"]);
+  });
+
+  it("handles backward-compatible scheme-chat responses without suggested_questions", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ response: "Legacy answer" }));
+    const service = new RemoteAiService({
+      baseUrl: "https://ai.example",
+      fetchImpl: fetchMock as typeof fetch,
+    });
+
+    const result = await service.chat({ message: "Legacy test" });
+    expect(result.response).toBe("Legacy answer");
+    expect(result.suggested_questions).toEqual([]);
   });
 
   it("uses multipart data for certificate OCR without setting content-type manually", async () => {
@@ -179,5 +203,9 @@ describe("AI contract normalization", () => {
     expect(result.project_category).toBe("manufacturing");
     expect(result.requested_amount).toBe(140000);
     expect(result.gender).toBeNull();
+
+    const chatResult = await service.chat({ message: "What is MUDRA loan?" });
+    expect(chatResult.response).toContain("PMMY");
+    expect(chatResult.suggested_questions.length).toBeGreaterThan(0);
   });
 });

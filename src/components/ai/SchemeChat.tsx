@@ -142,9 +142,10 @@ export function SchemeChat() {
               </div>
             </div>
           )}
-          {state.messages.map((message) => {
+          {state.messages.map((message, index) => {
             const isUser = message.role === "user";
             const messageKey = message.id || `${message.role}-${message.createdAt ?? message.content.slice(0, 15)}`;
+            const isLatestAssistant = !isUser && index === state.messages.map((m) => m.role).lastIndexOf("assistant");
             return (
               <div
                 key={messageKey}
@@ -171,6 +172,22 @@ export function SchemeChat() {
                       <FormattedMessage content={message.content} />
                     )}
                   </div>
+                  {isLatestAssistant && message.suggestedQuestions && message.suggestedQuestions.length > 0 && !isPending && (
+                    <div className="mt-3 flex flex-wrap gap-2 pt-1">
+                      {message.suggestedQuestions.map((question, qIndex) => (
+                        <button
+                          key={qIndex}
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleSendPrompt(question)}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50/80 px-3 py-1.5 text-xs font-semibold text-teal-900 shadow-2xs transition-all hover:border-teal-400 hover:bg-teal-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="text-teal-600">💡</span>
+                          <span>{question}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {message.createdAt && (
                     <span className="mt-1 text-[10px] font-bold text-slate-400 px-1">
                       {message.createdAt}
