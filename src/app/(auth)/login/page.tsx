@@ -4,10 +4,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams;
   return (
     <>
-      <span className="eyebrow">Secure access</span>
-      <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">Welcome back</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome back</h1>
       <p className="mb-7 mt-2 text-sm leading-6 text-slate-600">Sign in as an applicant or authorized officer.</p>
       <LoginForm nextPath={next} />
     </>
   );
 }
+

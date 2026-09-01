@@ -44,7 +44,7 @@ export function RegisterForm() {
           {state.message}
         </p>
       )}
-      <button className="button-primary w-full" disabled={pending} type="submit">
+      <button className="button-primary w-full cursor-pointer" disabled={pending} type="submit">
         {pending ? "Creating account…" : "Create applicant account"}
       </button>
       <p className="text-center text-sm text-slate-600">

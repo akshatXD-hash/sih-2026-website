@@ -42,7 +42,7 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
           {state.message}
         </p>
       )}
-      <button className="button-primary w-full" disabled={pending} type="submit">
+      <button className="button-primary w-full cursor-pointer" disabled={pending} type="submit">
         {pending ? "Signing in…" : "Sign in"}
       </button>
       <p className="text-center text-sm text-slate-600">
@@ -54,3 +54,5 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
     </form>
   );
 }
+
+
