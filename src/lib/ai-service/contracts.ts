@@ -17,7 +17,10 @@ export const schemeChatRequestSchema = z.object({
   history: z.array(chatHistoryItemSchema).max(50).default([]),
   language: z.string().trim().min(2).max(20).default("auto"),
 });
-export const schemeChatResponseSchema = z.object({ response: z.string() });
+export const schemeChatResponseSchema = z.object({
+  response: z.string(),
+  suggested_questions: z.array(z.string()).default([]),
+});
 
 export const extractApplicantIntentRequestSchema = z.object({
   transcript: z.string().trim().min(1).max(50_000),

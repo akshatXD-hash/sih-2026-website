@@ -26,7 +26,7 @@ output.
 | --- | --- | --- |
 | `GET /health` | `health()` | Service availability |
 | `POST /simplify-term` | `simplifyTerm()` | Plain-language term explanation |
-| `POST /scheme-chat` | `chat()` | Scheme Q&A with optional history |
+| `POST /scheme-chat` | `chat()` | Scheme Q&A with optional history and dynamic follow-up `suggested_questions` |
 | `POST /extract-applicant-intent` | `extractApplicantIntent()` | Structured applicant facts from a transcript |
 | `POST /recommend-scheme-explainer` | `explainRecommendation()` | Explanation of deterministic candidate results |
 | `POST /ocr-certificate` | `ocrCertificate()` | Multipart caste/income certificate extraction |
@@ -41,7 +41,7 @@ candidates first and send only those candidates to the explainer.
 | --- | --- |
 | `health()` | Officer-only diagnostic card on `/admin` |
 | `simplifyTerm()` | “Explain simply with AI” control on each `/schemes` card |
-| `chat()` | Applicant conversation UI on `/assistant` |
+| `chat()` | Applicant conversation UI on `/assistant` with interactive quick-reply suggestion chips |
 | `extractApplicantIntent()` | Reviewable form prefill on `/eligibility` |
 | `explainRecommendation()` | “Explain matches” panel above the deterministic shortlist |
 | `ocrCertificate()` | “Extract with AI” action for caste/income uploads on `/applications/new` |
@@ -51,7 +51,8 @@ rechecks authentication and validates its form data. The recommendation action
 accepts only an application ID from the browser, verifies ownership, reruns the
 deterministic matcher, and sends only eligible candidates to FastAPI. Chat
 history is validated and capped before it is sent upstream. Upstream error
-bodies are never returned to the browser.
+bodies are never returned to the browser. `/scheme-chat` returns `response` and
+an array of 2–3 `suggested_questions` rendered as clickable chips in the UI.
 
 ## Applicant intent mapping
 
