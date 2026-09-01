@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -25,13 +26,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         />
 
         {/* Top Header inside Left Hero */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg border border-[#d4a340]/30 bg-[#042119]/70 text-white backdrop-blur-md shadow-sm">
-            <svg className="size-4 text-[#d4a340]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <span className="font-serif text-2xl font-normal text-white tracking-tight">Kaarva</span>
+        <div className="relative z-10 flex items-center gap-3.5">
+          <Image
+            src="/images/kaarva-logo.png"
+            alt="Kaarva Logo"
+            width={52}
+            height={52}
+            className="size-13 rounded-full object-contain bg-white p-0.5 shadow-lg"
+          />
+          <span className="font-serif text-3xl font-normal text-white tracking-tight">Kaarva</span>
         </div>
 
         {/* Middle Main Headings */}
