@@ -9,17 +9,19 @@ import type { AiService } from "@/lib/ai-service/types";
 const configurationSchema = z.object({
   AI_SERVICE_MODE: z.enum(["mock", "remote"]).default("mock"),
   AI_SERVICE_URL: z.string().url().optional(),
+  AIML_SERVICE_URL: z.string().url().optional(),
   AI_SERVICE_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(30_000),
 });
 
 export function createAiService(environment: NodeJS.ProcessEnv = process.env): AiService {
   const configuration = configurationSchema.parse(environment);
   if (configuration.AI_SERVICE_MODE === "mock") return new MockAiService();
-  if (!configuration.AI_SERVICE_URL) {
-    throw new Error("AI_SERVICE_URL is required when AI_SERVICE_MODE is remote");
+  const url = configuration.AI_SERVICE_URL || configuration.AIML_SERVICE_URL;
+  if (!url) {
+    throw new Error("AI_SERVICE_URL or AIML_SERVICE_URL is required when AI_SERVICE_MODE is remote");
   }
   return new RemoteAiService({
-    baseUrl: configuration.AI_SERVICE_URL,
+    baseUrl: url,
     timeoutMs: configuration.AI_SERVICE_TIMEOUT_MS,
   });
 }

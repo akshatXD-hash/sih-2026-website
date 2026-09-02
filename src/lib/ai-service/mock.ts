@@ -8,9 +8,92 @@ import {
 } from "@/lib/ai-service/contracts";
 import type { AiService, OcrCertificateRequest } from "@/lib/ai-service/types";
 
-function extractAmount(text: string) {
-  const match = text.replaceAll(",", "").match(/(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)/i);
-  return match ? Number(match[1]) : 0;
+function parseNumericAmount(text: string): number {
+  const normalized = text.toLowerCase().replaceAll(",", "");
+  const lakhMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lac|लाख)/i);
+  if (lakhMatch) {
+    return Math.round(Number(lakhMatch[1]) * 100_000);
+  }
+  const thousandMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:thousand|हजार|हज़ार|k)/i);
+  if (thousandMatch) {
+    return Math.round(Number(thousandMatch[1]) * 1_000);
+  }
+  const standardMatch = normalized.match(/(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)/i);
+  return standardMatch ? Number(standardMatch[1]) : 0;
+}
+function extractAmount(text: string): number {
+  const lower = text.toLowerCase();
+  const loanRegex = /(?:loan(?:\s*of)?|need|require|चाहिए|कर्ज|लोन|ऋण|funding(?:\s*of)?)\s*(?:of|is|around)?\s*(?:₹|rs\.?|inr)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|thousand|हजार|हज़ार))?)/i;
+  const loanMatch = lower.match(loanRegex);
+  if (loanMatch) {
+    return parseNumericAmount(loanMatch[1]);
+  }
+  const sanitized = lower.replace(/(?:income|आय|salary|कमाई)[^.!?]*/gi, "");
+  return parseNumericAmount(sanitized || text);
+}
+function extractIncome(text: string): number {
+  const lower = text.toLowerCase();
+  const incomeRegex = /(?:income|आय|salary|कमाई)\s*(?:is|of|होती\s*है|है)?\s*(?:₹|rs\.?|inr)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|thousand|हजार|हज़ार))?)/i;
+  const match = lower.match(incomeRegex);
+  if (match) {
+    return parseNumericAmount(match[1]);
+  }
+  return 0;
+}
+
+function detectTrade(text: string): string {
+  const lower = text.toLowerCase();
+  if (lower.includes("tailor") || lower.includes("सिलाई") || lower.includes("दर्जी") || lower.includes("शिंपी")) {
+    return "tailoring";
+  }
+  if (lower.includes("carpent") || lower.includes("बढ़ई") || lower.includes("सुतार") || lower.includes("furniture")) {
+    return "carpentry";
+  }
+  if (lower.includes("weav") || lower.includes("बुनकर") || lower.includes("handloom") || lower.includes("हथकरघा")) {
+    return "handloom weaving";
+  }
+  if (lower.includes("potter") || lower.includes("कुम्हार") || lower.includes("मातीकाम")) {
+    return "pottery";
+  }
+  if (lower.includes("welder") || lower.includes("welding") || lower.includes("वेल्डिंग")) {
+    return "welding & fabrication";
+  }
+  if (lower.includes("mechanic") || lower.includes("repair") || lower.includes("मरम्मत") || lower.includes("गैरेज")) {
+    return "vehicle repair";
+  }
+  if (lower.includes("dairy") || lower.includes("डेयरी") || lower.includes("दूध") || lower.includes("पशुपालन")) {
+    return "dairy farming";
+  }
+  if (lower.includes("kirana") || lower.includes("grocery") || lower.includes("किराना") || lower.includes("दुकान") || lower.includes("retail")) {
+    return "retail shop";
+  }
+  return "";
+}
+
+function detectCategory(text: string, trade: string): "Manufacturing" | "Service" | "Trading" {
+  const lower = text.toLowerCase();
+  if (
+    lower.includes("manufactur") ||
+    lower.includes("कारखाना") ||
+    lower.includes("उत्पादन") ||
+    lower.includes("workshop") ||
+    trade === "carpentry" ||
+    trade === "welding & fabrication" ||
+    trade === "pottery"
+  ) {
+    return "Manufacturing";
+  }
+  if (
+    lower.includes("service") ||
+    lower.includes("सेवा") ||
+    lower.includes("repair") ||
+    lower.includes("सिलाई") ||
+    trade === "tailoring" ||
+    trade === "vehicle repair"
+  ) {
+    return "Service";
+  }
+  return "Trading";
 }
 
 export class MockAiService implements AiService {
@@ -67,29 +150,32 @@ export class MockAiService implements AiService {
 
   async extractApplicantIntent(input: Parameters<AiService["extractApplicantIntent"]>[0]) {
     const request = extractApplicantIntentRequestSchema.parse(input);
-    const lower = request.transcript.toLowerCase();
-    const projectCategory = (lower.includes("manufactur") || lower.includes("कारखाना") || lower.includes("उत्पादन"))
-      ? "Manufacturing" as const
-      : (lower.includes("service") || lower.includes("सेवा") || lower.includes("tailor") || lower.includes("सिलाई") || lower.includes("repair"))
-        ? "Service" as const
-        : "Trading" as const;
-    const gender = (lower.includes("female") || lower.includes("mahila") || lower.includes("महिला") || lower.includes("woman") || lower.includes("women"))
+    const transcript = request.transcript;
+    const lower = transcript.toLowerCase();
+
+    const trade = detectTrade(transcript);
+    const projectCategory = detectCategory(transcript, trade);
+
+    const gender = (lower.includes("female") || lower.includes("mahila") || lower.includes("महिला") || lower.includes("woman") || lower.includes("women") || lower.includes("स्त्री"))
       ? "Female"
       : lower.includes("non-binary")
         ? "Non-binary"
         : lower.includes("transgender")
           ? "Transgender"
-          : (lower.includes("male") || lower.includes("purush") || lower.includes("पुरुष") || lower.includes("man"))
+          : (lower.includes("male") || lower.includes("purush") || lower.includes("पुरुष") || lower.includes("man") || lower.includes("पुरुष"))
             ? "Male"
             : "Prefer not to say";
 
+    const requestedAmount = extractAmount(transcript);
+    const annualIncome = extractIncome(transcript);
+
     return normalizeApplicantIntent({
       project_category: projectCategory,
-      requested_amount: extractAmount(request.transcript),
-      annual_income: 0,
-      trade: lower.includes("tailor") || lower.includes("सिलाई") ? "tailoring" : "",
+      requested_amount: requestedAmount,
+      annual_income: annualIncome,
+      trade: trade || "",
       gender,
-      confidence: 0.85,
+      confidence: 0.95,
     });
   }
 
