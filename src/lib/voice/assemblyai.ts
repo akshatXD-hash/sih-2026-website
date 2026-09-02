@@ -1,5 +1,3 @@
-import "server-only";
-
 import { AssemblyAI } from "assemblyai";
 
 export interface TranscribeAudioOptions {

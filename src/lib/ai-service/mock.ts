@@ -8,28 +8,35 @@ import {
 } from "@/lib/ai-service/contracts";
 import type { AiService, OcrCertificateRequest } from "@/lib/ai-service/types";
 
-function extractAmount(text: string): number {
+function parseNumericAmount(text: string): number {
   const normalized = text.toLowerCase().replaceAll(",", "");
   const lakhMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lac|लाख)/i);
   if (lakhMatch) {
     return Math.round(Number(lakhMatch[1]) * 100_000);
   }
-
   const thousandMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:thousand|हजार|हज़ार|k)/i);
   if (thousandMatch) {
     return Math.round(Number(thousandMatch[1]) * 1_000);
   }
-
   const standardMatch = normalized.match(/(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)/i);
   return standardMatch ? Number(standardMatch[1]) : 0;
 }
-
+function extractAmount(text: string): number {
+  const lower = text.toLowerCase();
+  const loanRegex = /(?:loan(?:\s*of)?|need|require|चाहिए|कर्ज|लोन|ऋण|funding(?:\s*of)?)\s*(?:of|is|around)?\s*(?:₹|rs\.?|inr)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|thousand|हजार|हज़ार))?)/i;
+  const loanMatch = lower.match(loanRegex);
+  if (loanMatch) {
+    return parseNumericAmount(loanMatch[1]);
+  }
+  const sanitized = lower.replace(/(?:income|आय|salary|कमाई)[^.!?]*/gi, "");
+  return parseNumericAmount(sanitized || text);
+}
 function extractIncome(text: string): number {
   const lower = text.toLowerCase();
   const incomeRegex = /(?:income|आय|salary|कमाई)\s*(?:is|of|होती\s*है|है)?\s*(?:₹|rs\.?|inr)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|thousand|हजार|हज़ार))?)/i;
   const match = lower.match(incomeRegex);
   if (match) {
-    return extractAmount(match[1]);
+    return parseNumericAmount(match[1]);
   }
   return 0;
 }
