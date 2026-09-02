@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { startEligibilityAction } from "@/app/(applicant)/actions";
 import {
@@ -8,6 +8,7 @@ import {
   type IntentActionState,
 } from "@/app/(applicant)/ai/actions";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { ExtractedVoiceIntent, VoiceAutoFill } from "@/components/ai/VoiceAutoFill";
 
 const initialIntentState: IntentActionState = {};
 
@@ -30,31 +31,90 @@ export function EligibilityWizard() {
     startEligibilityAction,
     {},
   );
-  const formVersion = intentState.intent
+
+  const [voiceAppliedIntent, setVoiceAppliedIntent] = useState<ExtractedVoiceIntent | null>(null);
+  const [isVoiceFilled, setIsVoiceFilled] = useState(false);
+
+  const activeIntent = voiceAppliedIntent
+    ? {
+      projectCategory: voiceAppliedIntent.projectCategory ?? undefined,
+      trade: voiceAppliedIntent.trade ?? undefined,
+      requestedAmount: voiceAppliedIntent.requestedAmount,
+      annualIncome: voiceAppliedIntent.annualIncome,
+      suggestedGender: voiceAppliedIntent.suggestedGender ?? undefined,
+      confidence: voiceAppliedIntent.confidence,
+      warnings: voiceAppliedIntent.warnings,
+    }
+    : intentState.intent;
+
+  const formVersion = activeIntent
     ? [
-        intentState.intent.projectCategory,
-        intentState.intent.confidence,
-        intentState.intent.requestedAmount ?? "",
-        intentState.intent.annualIncome ?? "",
-        intentState.intent.trade ?? "",
-        intentState.intent.suggestedGender ?? "",
-      ].join(":")
+      activeIntent.projectCategory ?? "",
+      activeIntent.confidence,
+      activeIntent.requestedAmount ?? "",
+      activeIntent.annualIncome ?? "",
+      activeIntent.trade ?? "",
+      activeIntent.suggestedGender ?? "",
+      isVoiceFilled ? "voice" : "text",
+    ].join(":")
     : "manual";
+
+  function handleVoiceApply(intent: ExtractedVoiceIntent) {
+    setVoiceAppliedIntent(intent);
+    setIsVoiceFilled(true);
+  }
+
+  function handleUndoVoiceFill() {
+    setVoiceAppliedIntent(null);
+    setIsVoiceFilled(false);
+  }
 
   return (
     <div className="space-y-6">
+      <VoiceAutoFill onApply={handleVoiceApply} />
+
+      {isVoiceFilled && voiceAppliedIntent && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-emerald-950">
+                Voice Auto-Fill Applied ({Math.round(voiceAppliedIntent.confidence * 100)}% accuracy)
+              </p>
+              <p className="text-[11px] text-emerald-800">
+                Transcribed from audio in <strong>{voiceAppliedIntent.language.toUpperCase()}</strong>. Review the highlighted fields below.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleUndoVoiceFill}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-xs hover:bg-emerald-50"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            Undo Voice Fill
+          </button>
+        </div>
+      )}
+
       <form action={intentAction} className="panel border-violet-200 bg-violet-50/40">
         <input type="hidden" name="language" value="auto" />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">AI-assisted intake</span>
+              <span className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">Text intake</span>
               <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-800">
                 <span className="h-1.5 w-1.5 rounded-full bg-violet-600 animate-pulse" />
                 Auto Multi-lingual
               </span>
             </div>
-            <h2 className="mt-2 text-xl font-bold text-slate-950">Describe your need in your own words</h2>
+            <h2 className="mt-2 text-xl font-bold text-slate-950">Or type your need in your own words</h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
               Enter your details in any language (English, हिंदी, मराठी, Hinglish, etc.). The AI automatically identifies the language and prefills the form for your review.
             </p>
@@ -78,7 +138,7 @@ export function EligibilityWizard() {
             {intentState.error}
           </p>
         )}
-        {intentState.intent && (
+        {intentState.intent && !isVoiceFilled && (
           <div className="mt-4 rounded-xl border border-violet-200 bg-white p-4 text-sm">
             <p className="font-bold text-violet-900">
               Suggestions applied · {Math.round(intentState.intent.confidence * 100)}% model confidence
@@ -96,13 +156,22 @@ export function EligibilityWizard() {
             {profileState.error}
           </p>
         )}
+
         <label className="space-y-2 sm:col-span-2">
-          <span className="text-sm font-bold text-slate-700">Project category</span>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-slate-700">Project category</span>
+            {isVoiceFilled && activeIntent?.projectCategory && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-800">
+                ⚡ Auto-filled by Voice
+              </span>
+            )}
+          </div>
           <select
-            className="field"
+            className={`field transition-colors ${isVoiceFilled && activeIntent?.projectCategory ? "border-violet-400 bg-violet-50/20 ring-2 ring-violet-100" : ""
+              }`}
             name="projectCategory"
             required
-            defaultValue={intentState.intent?.projectCategory ?? ""}
+            defaultValue={activeIntent?.projectCategory ?? ""}
           >
             <option value="" disabled>Select a category</option>
             <option value="micro-enterprise">Micro enterprise</option>
@@ -116,11 +185,19 @@ export function EligibilityWizard() {
           </select>
         </label>
         <label className="space-y-2">
-          <span className="text-sm font-bold text-slate-700">Trade or occupation</span>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-slate-700">Trade or occupation</span>
+            {isVoiceFilled && activeIntent?.trade && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-800">
+                Auto-filled by Voice
+              </span>
+            )}
+          </div>
           <input
-            className="field"
+            className={`field transition-colors ${isVoiceFilled && activeIntent?.trade ? "border-violet-400 bg-violet-50/20 ring-2 ring-violet-100" : ""
+              }`}
             name="trade"
-            defaultValue={intentState.intent?.trade ?? ""}
+            defaultValue={activeIntent?.trade ?? ""}
             placeholder="e.g. tailoring"
           />
         </label>
@@ -141,8 +218,21 @@ export function EligibilityWizard() {
           </div>
         </fieldset>
         <label className="space-y-2">
-          <span className="text-sm font-bold text-slate-700">Gender</span>
-          <select className="field" name="gender" required defaultValue={intentState.intent?.suggestedGender ?? "PREFER_NOT_TO_SAY"}>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-slate-700">Gender</span>
+            {isVoiceFilled && activeIntent?.suggestedGender && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-800">
+                Suggested by Voice
+              </span>
+            )}
+          </div>
+          <select
+            className={`field transition-colors ${isVoiceFilled && activeIntent?.suggestedGender ? "border-violet-400 bg-violet-50/20 ring-2 ring-violet-100" : ""
+              }`}
+            name="gender"
+            required
+            defaultValue={activeIntent?.suggestedGender ?? "PREFER_NOT_TO_SAY"}
+          >
             <option value="FEMALE">Female</option>
             <option value="MALE">Male</option>
             <option value="TRANSGENDER">Transgender</option>
@@ -151,22 +241,45 @@ export function EligibilityWizard() {
             <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
           </select>
         </label>
-
-        {intentState.intent && (
+        {activeIntent && (
           <div className="grid gap-4 rounded-xl border border-teal-200 bg-teal-50/50 p-4 sm:col-span-2 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <p className="font-bold text-teal-950">Review the AI-filled financial values</p>
               <p className="mt-1 text-xs text-teal-800">These will prefill step 2 and can still be changed there.</p>
             </div>
             <label className="space-y-2">
-              <span className="text-sm font-bold text-slate-700">Requested amount</span>
-              <input className="field" type="number" name="suggestedRequestedAmount" min="1" max="50000000" defaultValue={intentState.intent.requestedAmount ?? ""} />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-slate-700">Requested amount</span>
+                {isVoiceFilled && activeIntent.requestedAmount && (
+                  <span className="text-[10px] font-bold text-teal-800">⚡ Extracted ₹{activeIntent.requestedAmount.toLocaleString("en-IN")}</span>
+                )}
+              </div>
+              <input
+                className="field"
+                type="number"
+                name="suggestedRequestedAmount"
+                min="1"
+                max="50000000"
+                defaultValue={activeIntent.requestedAmount ?? ""}
+              />
             </label>
             <label className="space-y-2">
-              <span className="text-sm font-bold text-slate-700">Annual household income</span>
-              <input className="field" type="number" name="suggestedAnnualIncome" min="0" max="100000000" defaultValue={intentState.intent.annualIncome ?? ""} />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-slate-700">Annual household income</span>
+                {isVoiceFilled && activeIntent.annualIncome ? (
+                  <span className="text-[10px] font-bold text-teal-800">⚡ Extracted ₹{activeIntent.annualIncome.toLocaleString("en-IN")}</span>
+                ) : null}
+              </div>
+              <input
+                className="field"
+                type="number"
+                name="suggestedAnnualIncome"
+                min="0"
+                max="100000000"
+                defaultValue={activeIntent.annualIncome ?? ""}
+              />
             </label>
-            {intentState.intent.suggestedGender && (
+            {activeIntent.suggestedGender && (
               <label className="flex items-start gap-3 sm:col-span-2">
                 <input className="mt-1 h-4 w-4 accent-teal-700" type="checkbox" required />
                 <span className="text-sm text-slate-700">I reviewed the AI-suggested gender and confirm the selected value is correct.</span>
@@ -174,7 +287,6 @@ export function EligibilityWizard() {
             )}
           </div>
         )}
-
         <div className="sm:col-span-2">
           <button className="button-primary" type="submit">Continue to financial details</button>
         </div>
