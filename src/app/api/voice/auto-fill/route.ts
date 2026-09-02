@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { getAiService } from "@/lib/ai-service";
+import { MockAiService } from "@/lib/ai-service/mock";
 import { requireApplicant } from "@/lib/auth/guards";
-import { transcribeAudio } from "@/lib/voice/assemblyai";
+import { transcribeAudio } from "@/lib/voice/whisper";
 
 export async function POST(request: Request) {
   try {
@@ -45,11 +46,22 @@ export async function POST(request: Request) {
         { status: 422 }
       );
     }
-    const aiService = getAiService();
-    const intent = await aiService.extractApplicantIntent({
-      transcript: transcription.transcript,
-      language: transcription.language,
-    });
+
+    let intent;
+    try {
+      const aiService = getAiService();
+      intent = await aiService.extractApplicantIntent({
+        transcript: transcription.transcript,
+        language: transcription.language,
+      });
+    } catch (aiErr) {
+      console.warn("AI service intent extraction failed, using fallback extractor:", aiErr);
+      const fallbackService = new MockAiService();
+      intent = await fallbackService.extractApplicantIntent({
+        transcript: transcription.transcript,
+        language: transcription.language,
+      });
+    }
 
     return NextResponse.json({
       transcript: transcription.transcript,

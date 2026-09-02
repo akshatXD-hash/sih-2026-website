@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireApplicant } from "@/lib/auth/guards";
-import { transcribeAudio } from "@/lib/voice/assemblyai";
+import { transcribeAudio } from "@/lib/voice/whisper";
 
 export async function POST(request: Request) {
   try {

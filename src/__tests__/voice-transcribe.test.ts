@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { MockAiService } from "@/lib/ai-service/mock";
-import { transcribeAudio } from "@/lib/voice/assemblyai";
+import { transcribeAudio } from "@/lib/voice/whisper";
 
-describe("Voice Speech-to-Text with AssemblyAI", () => {
+describe("Voice Speech-to-Text with Groq Whisper", () => {
   it("transcribes audio in English using mock fallback when offline", async () => {
     const fakeAudio = Buffer.from("fake-audio-bytes");
     const result = await transcribeAudio({

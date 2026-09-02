@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAiService } from "@/lib/ai-service";
+import { MockAiService } from "@/lib/ai-service/mock";
 import { requireApplicant } from "@/lib/auth/guards";
 
 const intentBodySchema = z.object({
@@ -32,11 +33,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const aiService = getAiService();
-    const result = await aiService.extractApplicantIntent({
-      transcript: parsed.data.transcript,
-      language: parsed.data.language,
-    });
+    let result;
+    try {
+      const aiService = getAiService();
+      result = await aiService.extractApplicantIntent({
+        transcript: parsed.data.transcript,
+        language: parsed.data.language,
+      });
+    } catch (aiErr) {
+      console.warn("AI service intent extraction failed, using fallback extractor:", aiErr);
+      const fallbackService = new MockAiService();
+      result = await fallbackService.extractApplicantIntent({
+        transcript: parsed.data.transcript,
+        language: parsed.data.language,
+      });
+    }
 
     return NextResponse.json({
       projectCategory: result.project_category,
