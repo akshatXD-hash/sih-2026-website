@@ -85,7 +85,7 @@ export async function transcribeAudio(
 
     const transcriptParams: Parameters<typeof client.transcripts.transcribe>[0] = {
       audio: audioBuffer,
-      speech_model: options.speechModel ?? "best",
+      speech_models: ["universal-3-5-pro", "universal-2"],
       ...(requestedLang
         ? { language_code: requestedLang as any }
         : { language_detection: true }),
