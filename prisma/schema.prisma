@@ -76,6 +76,7 @@ enum DocumentStatus {
 }
 
 model User {
+  branchSupportReviews BranchSchemeSupport[]
   id           String   @id @default(cuid())
   email        String   @unique
   phone        String?  @unique
@@ -97,6 +98,7 @@ model User {
 }
 
 model LoanScheme {
+  branchSupportReviews BranchSchemeSupport[]
   id                    String       @id @default(cuid())
   slug                  String       @unique
   name                  String
@@ -134,6 +136,7 @@ model LoanScheme {
 }
 
 model ChannelPartner {
+  branchSupportReviews BranchSchemeSupport[]
   id                  String             @id @default(cuid())
   name                String
   type                ChannelPartnerType
@@ -271,4 +274,63 @@ model ApplicationStatusEvent {
   @@index([applicationId, createdAt])
   @@index([toStatus, createdAt])
   @@map("application_status_events")
+}
+
+// Public geographic directory. These records do not establish scheme participation.
+model SearchPlace {
+  id String @id
+  name String
+  nameKey String @map("name_key")
+  aliases String[] @default([])
+  district String?
+  state String?
+  pincode String?
+  kind String
+  population Int @default(0)
+  latitude Float
+  longitude Float
+  sourceUrl String @map("source_url")
+  importedAt DateTime @default(now()) @map("imported_at") @db.Timestamptz
+  @@index([nameKey(ops: raw("text_pattern_ops"))], map: "search_places_name_key_idx")
+  @@index([aliases], type: Gin, map: "search_places_aliases_idx")
+  @@index([pincode], map: "search_places_pincode_idx")
+  @@map("search_places")
+}
+
+model BankDirectory {
+  branchSupportReviews BranchSchemeSupport[]
+  @@index([pincode], map: "bank_directory_pincode_idx")
+  id String @id
+  name String
+  addressLine String? @map("address_line")
+  district String?
+  state String?
+  pincode String?
+  phone String?
+  sourceUrl String @map("source_url")
+  importedAt DateTime @default(now()) @map("imported_at") @db.Timestamptz
+  location Unsupported("geography(Point, 4326)")
+  @@index([location], type: Gist, map: "bank_directory_location_gist_idx")
+  @@map("bank_directory")
+}
+
+model BranchSchemeSupport {
+  id Int @id @default(autoincrement())
+  schemeId String @map("scheme_id")
+  bankId String? @map("bank_id")
+  partnerId String? @map("partner_id")
+  status String
+  evidenceUrl String @map("evidence_url")
+  notes String
+  verifiedAt DateTime @map("verified_at") @db.Timestamptz
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  reviewerId String @map("reviewer_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  scheme LoanScheme @relation(fields: [schemeId], references: [id], onDelete: Restrict)
+  bank BankDirectory? @relation(fields: [bankId], references: [id], onDelete: Restrict)
+  partner ChannelPartner? @relation(fields: [partnerId], references: [id], onDelete: Restrict)
+  reviewer User @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+  @@index([schemeId, bankId, id(sort: Desc)], map: "branch_scheme_bank_idx")
+  @@index([schemeId, partnerId, id(sort: Desc)], map: "branch_scheme_partner_idx")
+  @@map("branch_scheme_support")
 }
