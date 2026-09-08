@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap } from "leaflet";
 
 import type { ScoredBranch } from "@/lib/branch-ranking";
+import { supportLabels } from "@/lib/scheme-support";
 
 interface BranchMapProps {
   branches: ScoredBranch[];
   centerLat: number;
   centerLng: number;
+  centerLabel?: string;
 }
 
 const INR = new Intl.NumberFormat("en-IN", {
@@ -42,6 +44,24 @@ function createPopup(branch: ScoredBranch) {
   address.style.cssText = "font-size:12px;color:#64748b;margin-bottom:8px";
   address.textContent = [branch.addressLine, branch.pincode].filter(Boolean).join(" ");
   popup.append(address);
+  if (branch.schemeSupport) {
+    const support = document.createElement("p");
+    support.textContent = supportLabels[branch.schemeSupport.status];
+    popup.append(support);
+  }
+
+  if (branch.directorySource) {
+    const info = document.createElement("p");
+    info.textContent = `${branch.distanceKm} km straight-line distance. Mapped bank; contact branch before travelling.`;
+    popup.append(info);
+    const directions = document.createElement("a");
+    directions.href = `https://www.google.com/maps/dir/?api=1&destination=${branch.latitude},${branch.longitude}`;
+    directions.target = "_blank";
+    directions.rel = "noopener noreferrer";
+    directions.textContent = "Get directions";
+    popup.append(directions);
+    return popup;
+  }
 
   const details = document.createElement("dl");
   details.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px";
@@ -66,7 +86,7 @@ function createPopup(branch: ScoredBranch) {
   return popup;
 }
 
-export function BranchMap({ branches, centerLat, centerLng }: BranchMapProps) {
+export function BranchMap({ branches, centerLat, centerLng, centerLabel = "Search center" }: BranchMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const [error, setError] = useState(false);
@@ -92,7 +112,7 @@ export function BranchMap({ branches, centerLat, centerLng }: BranchMapProps) {
 
       const locationPopup = document.createElement("div");
       locationPopup.style.cssText = "text-align:center;font-weight:600;color:#0f172a";
-      locationPopup.textContent = "Your location";
+      locationPopup.textContent = centerLabel;
       L.circleMarker([centerLat, centerLng], {
         radius: 10,
         color: "#dc2626",
@@ -103,10 +123,10 @@ export function BranchMap({ branches, centerLat, centerLng }: BranchMapProps) {
 
       const bounds = L.latLngBounds([[centerLat, centerLng]]);
       for (const branch of branches) {
-        const color = scoreColor(branch.score);
+        const color = branch.directorySource ? "#2563eb" : scoreColor(branch.score);
         const icon = L.divIcon({
           className: "",
-          html: `<div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:${color};color:white;font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.25);border:2px solid white">${Math.round(branch.score)}</div>`,
+          html: `<div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:${color};color:white;font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.25);border:2px solid white">${branch.directorySource ? "B" : Math.round(branch.score)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 16],
         });
@@ -128,7 +148,7 @@ export function BranchMap({ branches, centerLat, centerLng }: BranchMapProps) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [branches, centerLat, centerLng]);
+  }, [branches, centerLat, centerLng, centerLabel]);
 
   if (error) {
     return (

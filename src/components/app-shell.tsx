@@ -12,7 +12,7 @@ const applicantNav = [
 ] as const;
 
 export function AppShell({ children, user, mode }: AppShellProps) {
-  const navigation = mode === "admin" ? ([ ["01", "Lead dashboard", "/admin"] ] as const) : applicantNav;
+  const navigation = mode === "admin" ? ([ ["01", "Lead dashboard", "/admin"], ...(user.role === "ADMIN" || user.role === "REVIEWER" ? [["02", "Branch scheme support", "/admin/branch-support"]] : []) ] as const) : applicantNav;
   const home = mode === "admin" ? "/admin" : "/eligibility";
   return (
     <div className="min-h-screen bg-[#f1f0eb] lg:grid lg:grid-cols-[270px_1fr]">

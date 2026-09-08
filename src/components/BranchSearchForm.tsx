@@ -5,15 +5,23 @@ import { useRef, useState, useTransition } from "react";
 interface BranchSearchFormProps {
   applicationId?: string;
   defaultDistrict?: string;
+  defaultPlaceId?: string;
+  schemes?: Array<{ id: string; name: string }>;
+  selectedSchemeId?: string;
+  defaultConfirmedOnly?: boolean;
   defaultLat?: number;
   defaultLng?: number;
   defaultRadius?: number;
-  action: (formData: FormData) => void;
+  action: (formData: FormData) => void | Promise<void>;
 }
 
 export function BranchSearchForm({
   applicationId,
   defaultDistrict,
+  defaultPlaceId,
+  schemes = [],
+  selectedSchemeId,
+  defaultConfirmedOnly,
   defaultLat,
   defaultLng,
   defaultRadius,
@@ -23,10 +31,16 @@ export function BranchSearchForm({
   const [geoError, setGeoError] = useState<string | null>(null);
   const latRef = useRef<HTMLInputElement>(null);
   const lngRef = useRef<HTMLInputElement>(null);
+  const districtRef = useRef<HTMLInputElement>(null);
+  const placeRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleGeolocate() {
+    if (!window.isSecureContext) {
+      setGeoError("Current location requires HTTPS or localhost. Enter your district or coordinates below.");
+      return;
+    }
     if (!navigator.geolocation) {
       setGeoError("Geolocation is not supported by this browser.");
       return;
@@ -37,13 +51,16 @@ export function BranchSearchForm({
       (pos) => {
         if (latRef.current) latRef.current.value = String(pos.coords.latitude);
         if (lngRef.current) lngRef.current.value = String(pos.coords.longitude);
+        if (districtRef.current) districtRef.current.value = "";
+        if (placeRef.current) placeRef.current.value = "";
         setLocating(false);
-        // Auto-submit after getting location
+        if (pos.coords.accuracy > 1000) {
+          setGeoError(`Your browser estimates this location within ${Math.ceil(pos.coords.accuracy / 1000)} km. Enter your district for a more useful search, or press Search branches to use these coordinates.`);
+          return;
+        }
+        // Submit through the same validation path as manual input.
         if (formRef.current) {
-          startTransition(() => {
-            const fd = new FormData(formRef.current!);
-            action(fd);
-          });
+          formRef.current.requestSubmit();
         }
       },
       (err) => {
@@ -59,15 +76,39 @@ export function BranchSearchForm({
             setGeoError("Could not get your location. Enter manually.");
         }
       },
-      { enableHighAccuracy: true, timeout: 10_000 },
+      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 },
     );
   }
 
   return (
-    <form ref={formRef} action={action} className="panel h-fit space-y-4">
+    <form ref={formRef} action={action} onSubmit={(event) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      if (formData.get("confirmedOnly") === "1" && !formData.get("schemeId")) {
+        setGeoError("Choose a scheme to search only confirmed branches.");
+        return;
+      }
+      const lat = String(formData.get("lat") ?? "").trim();
+      const lng = String(formData.get("lng") ?? "").trim();
+      const district = String(formData.get("district") ?? "").trim();
+      if (Boolean(lat) !== Boolean(lng) || (!lat && district.length < 2 && !formData.get("placeId"))) {
+        setGeoError("Enter both coordinates, or a village, city or PIN code with at least two characters.");
+        return;
+      }
+      formData.set("lat", lat);
+      formData.set("lng", lng);
+      formData.set("district", district);
+      setGeoError(null);
+      startTransition(async () => { await action(formData); });
+    }} className="panel h-fit space-y-4">
       {applicationId && (
         <input type="hidden" name="applicationId" value={applicationId} />
       )}
+      <input ref={placeRef} type="hidden" name="placeId" defaultValue={defaultPlaceId ?? ""} />
+      {applicationId ? <input type="hidden" name="schemeId" value={selectedSchemeId ?? ""} /> : <label className="block text-sm font-semibold">Check support for a scheme<select name="schemeId" className="field mt-1" defaultValue={selectedSchemeId ?? ""} disabled={isPending} onChange={() => {
+        if (!locating && (placeRef.current?.value || districtRef.current?.value || (latRef.current?.value && lngRef.current?.value))) formRef.current?.requestSubmit();
+      }}><option value="">All banks (no scheme selected)</option>{schemes.map(scheme => <option key={scheme.id} value={scheme.id}>{scheme.name}</option>)}</select></label>}
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="confirmedOnly" value="1" defaultChecked={defaultConfirmedOnly} />Only show branches with current scheme confirmation</label>
 
       {/* Geolocation button */}
       <button
@@ -104,6 +145,8 @@ export function BranchSearchForm({
           <span className="text-xs font-bold text-slate-600">Latitude</span>
           <input
             ref={latRef}
+            onChange={() => { if (districtRef.current) districtRef.current.value = ""; if (placeRef.current) placeRef.current.value = ""; }}
+            readOnly={locating || isPending}
             className="field text-sm"
             name="lat"
             type="number"
@@ -118,6 +161,8 @@ export function BranchSearchForm({
           <span className="text-xs font-bold text-slate-600">Longitude</span>
           <input
             ref={lngRef}
+            onChange={() => { if (districtRef.current) districtRef.current.value = ""; if (placeRef.current) placeRef.current.value = ""; }}
+            readOnly={locating || isPending}
             className="field text-sm"
             name="lng"
             type="number"
@@ -133,15 +178,26 @@ export function BranchSearchForm({
       {/* District fallback */}
       <label className="block space-y-1.5">
         <span className="text-xs font-bold text-slate-600">
-          District / City <span className="font-normal text-slate-400">(fallback)</span>
+          Village, town, city or PIN code
         </span>
         <input
           className="field text-sm"
           name="district"
+          ref={districtRef}
+          minLength={2}
+          maxLength={80}
+          readOnly={locating || isPending}
+          onChange={() => {
+            if (placeRef.current) placeRef.current.value = "";
+            if (latRef.current) latRef.current.value = "";
+            if (lngRef.current) lngRef.current.value = "";
+          }}
           defaultValue={defaultDistrict}
-          placeholder="e.g. Pune"
+          placeholder="e.g. Bengaluru, Devanahalli or 562110"
         />
       </label>
+
+      <p className="text-xs text-slate-500">For villages with the same name, add a comma and your state. PIN codes show matching postal localities to choose from.</p>
 
       {/* Radius */}
       <label className="block space-y-1.5">
@@ -158,7 +214,7 @@ export function BranchSearchForm({
         />
       </label>
 
-      <button className="button-primary w-full" type="submit" disabled={isPending}>
+      <button className="button-primary w-full" type="submit" disabled={locating || isPending}>
         {isPending ? "Searching…" : "Search branches"}
       </button>
     </form>

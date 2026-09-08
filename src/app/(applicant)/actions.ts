@@ -7,6 +7,7 @@ import { ApplicationStatus, Gender } from "@/generated/prisma/enums";
 import { requireApplicant } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 import { matchSchemes } from "@/lib/matching";
+import { partnerSupportsScheme } from "@/lib/branch-scheme-support";
 
 const applicantTagSchema = z.enum([
   "SC", "ST", "OBC", "MINORITY", "STREET_VENDOR", "ARTISAN",
@@ -42,6 +43,8 @@ const financeSchema = z.object({
 
 const branchSearchSchema = z
   .object({
+    placeId: z.string().trim().min(1).max(100).optional(),
+    schemeId: z.string().trim().min(1).max(100).optional(),
     applicationId: z.string().trim().min(1).max(100).optional(),
     lat: z.coerce.number().min(-90).max(90).optional(),
     lng: z.coerce.number().min(-180).max(180).optional(),
@@ -54,7 +57,7 @@ const branchSearchSchema = z
     if (hasLat !== hasLng) {
       context.addIssue({ code: "custom", message: "Provide both latitude and longitude" });
     }
-    if (!hasLat && !value.district) {
+    if (!hasLat && !value.district && !value.placeId) {
       context.addIssue({ code: "custom", message: "Provide coordinates or a district" });
     }
   });
@@ -152,7 +155,7 @@ export async function selectSchemeAction(
 
   const result = await prisma.application.updateMany({
     where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT },
-    data: { loanSchemeId: scheme.id },
+    data: { loanSchemeId: scheme.id, channelPartnerId: null },
   });
   if (result.count !== 1) notFound();
 
@@ -162,6 +165,8 @@ export async function selectSchemeAction(
 export async function searchBranchesAction(formData: FormData) {
   await requireApplicant();
   const parsed = branchSearchSchema.safeParse({
+    schemeId: formData.get("schemeId") || undefined,
+    placeId: formData.get("placeId") || undefined,
     applicationId: formData.get("applicationId") || undefined,
     lat: formData.get("lat") || undefined,
     lng: formData.get("lng") || undefined,
@@ -169,7 +174,7 @@ export async function searchBranchesAction(formData: FormData) {
     district: formData.get("district") || undefined,
   });
   if (!parsed.success) throw new Error("Enter valid coordinates or a district");
-  const { applicationId, lat, lng, radius, district } = parsed.data;
+  const { applicationId, lat, lng, radius, district, placeId, schemeId } = parsed.data;
 
   const params = new URLSearchParams();
   if (lat != null && lng != null) {
@@ -178,7 +183,10 @@ export async function searchBranchesAction(formData: FormData) {
   }
   params.set("radius", String(radius));
   if (district) params.set("district", district);
+  if (placeId && lat == null && lng == null) params.set("placeId", placeId);
   if (applicationId) params.set("applicationId", applicationId);
+  if (schemeId) params.set("schemeId", schemeId);
+  if (formData.get("confirmedOnly") === "1" && (schemeId || applicationId)) params.set("confirmedOnly", "1");
   redirect(`/branches?${params.toString()}`);
 }
 
@@ -200,8 +208,13 @@ export async function selectBranchAction(
   `;
   if (!branch) notFound();
 
+  const application = await prisma.application.findFirst({ where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT }, select: { loanSchemeId: true } });
+  if (!application?.loanSchemeId || !await partnerSupportsScheme(branch.id, application.loanSchemeId)) {
+    redirect(`/branches?applicationId=${encodeURIComponent(applicationId)}&supportError=1`);
+  }
+
   const result = await prisma.application.updateMany({
-    where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT },
+    where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT, loanSchemeId: application.loanSchemeId },
     data: { channelPartnerId: branch.id },
   });
   if (result.count !== 1) notFound();
@@ -218,12 +231,17 @@ export async function submitApplicationAction(applicationId: string) {
   if (!application) notFound();
   if (!application.loanSchemeId) throw new Error("Choose a scheme before submitting");
   if (!application.channelPartnerId) throw new Error("Choose a branch before submitting");
+  if (!await partnerSupportsScheme(application.channelPartnerId, application.loanSchemeId)) {
+    redirect(`/branches?applicationId=${encodeURIComponent(applicationId)}&supportError=1`);
+  }
 
   await prisma.$transaction(async (transaction) => {
-    await transaction.application.update({
-      where: { id: application.id },
+    const updated = await transaction.application.updateMany({
+      where: { id: application.id, userId: user.id, status: ApplicationStatus.DRAFT,
+        loanSchemeId: application.loanSchemeId, channelPartnerId: application.channelPartnerId },
       data: { status: ApplicationStatus.SUBMITTED, submittedAt: new Date() },
     });
+    if (updated.count !== 1) throw new Error("Application changed. Refresh and review it before submitting.");
     await transaction.applicationStatusEvent.create({
       data: {
         applicationId: application.id,
