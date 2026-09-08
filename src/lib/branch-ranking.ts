@@ -16,6 +16,7 @@
 
 /** A branch row returned from the PostGIS radius query, before scoring. */
 export interface BranchWithDistance {
+  schemeSupport?: import("@/lib/scheme-support").SchemeSupport;
   id: string;
   name: string;
   type: string;
@@ -36,6 +37,7 @@ export interface BranchWithDistance {
   latitude: number;
   /** Longitude extracted from the PostGIS point. */
   longitude: number;
+  directorySource?: { url: string; importedAt: string };
 }
 
 /** A branch after the scoring formula has been applied. */

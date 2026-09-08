@@ -29,20 +29,18 @@ function finiteNumber(value: unknown): number | null {
 }
 
 export async function findDistrictCenter(district: string) {
-  const [center] = await prisma.$queryRaw<Array<{ lat: number | string; lng: number | string }>>`
+  const [center] = await prisma.$queryRaw<Array<{ lat: number | string | null; lng: number | string | null }>>`
     SELECT
-      ST_Y(location::geometry) AS lat,
-      ST_X(location::geometry) AS lng
+      AVG(ST_Y(location::geometry)) AS lat,
+      AVG(ST_X(location::geometry)) AS lng
     FROM channel_partners
     WHERE is_active = true
       AND is_verified = true
       AND location IS NOT NULL
-      AND (district ILIKE ${district} OR name ILIKE ${`%${district}%`})
-    ORDER BY name ASC
-    LIMIT 1
+      AND LOWER(TRIM(district)) = LOWER(${district.trim()})
   `;
 
-  if (!center) return null;
+  if (!center || center.lat == null || center.lng == null) return null;
   return { latitude: Number(center.lat), longitude: Number(center.lng) };
 }
 
@@ -50,7 +48,10 @@ export async function findNearbyBranches(input: {
   latitude: number;
   longitude: number;
   radiusKm: number;
+  schemeId?: string;
+  confirmedOnly?: boolean;
 }) {
+  if (input.confirmedOnly && !input.schemeId) throw new Error("Choose a scheme before filtering confirmed partners");
   if (!Number.isFinite(input.latitude) || input.latitude < -90 || input.latitude > 90) {
     throw new RangeError("Latitude must be between -90 and 90");
   }
@@ -90,6 +91,13 @@ export async function findNearbyBranches(input: {
         ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography,
         ${radiusMetres}
       )
+      AND (${!input.confirmedOnly} OR EXISTS (
+        SELECT 1 FROM (
+          SELECT status, verified_at, expires_at FROM branch_scheme_support
+          WHERE partner_id = channel_partners.id AND scheme_id = ${input.schemeId ?? ""}
+          ORDER BY id DESC LIMIT 1
+        ) latest WHERE status = 'SUPPORTED' AND verified_at <= NOW() AND expires_at > NOW()
+      ))
     ORDER BY distance_metres ASC
   `;
 
