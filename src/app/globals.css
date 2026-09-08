@@ -9,15 +9,17 @@
   --line: #cfcec6;
   --signal: #dfff45;
   --signal-dark: #b9df16;
-  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: var(--font-sans-google), "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-serif-google), "Playfair Display", Georgia, serif;
+  --font-mono: var(--font-mono-google), "JetBrains Mono", monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: "Courier New", Courier, monospace;
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
   --color-slate-50: #f7f6f1;
   --color-slate-100: #ebeae4;
   --color-slate-200: #d5d4cc;
@@ -44,12 +46,19 @@
 
 * { border-color: var(--line); }
 html { scroll-behavior: smooth; }
-body { background: var(--background); color: var(--foreground); font-family: Arial, Helvetica, sans-serif; }
+body { 
+  background: var(--background); 
+  color: var(--foreground); 
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 ::selection { background: var(--signal); color: var(--ink); }
 
 button, a, input, select, textarea {
   transition: border-color 160ms ease, background-color 160ms ease,
     color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  font-family: inherit;
 }
 
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -67,14 +76,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   background-size: 72px 72px;
 }
 
+.artisan-paper-grid {
+  background-image: 
+    linear-gradient(rgba(30, 58, 43, 0.035) 1px, transparent 1px), 
+    linear-gradient(90deg, rgba(30, 58, 43, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.artisan-panel {
+  border: 1px solid rgba(30, 58, 43, 0.15);
+  background-color: rgba(250, 246, 238, 0.88);
+  backdrop-filter: blur(8px);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px -4px rgba(30, 58, 43, 0.06);
+}
+
 .display-title { font-size: clamp(3.4rem, 8.2vw, 8.5rem); font-weight: 800; letter-spacing: -.075em; line-height: .82; }
-.editorial-serif { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 400; }
+.editorial-serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; }
 .hairline-top { border-top: 1px solid currentColor; }
 
 @layer components {
   .page-shell { @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-10; }
-  .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-black/20 bg-transparent px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.19em] text-black; }
-  .eyebrow::before { content: ""; width: .45rem; height: .45rem; border-radius: 999px; background: var(--signal-dark); }
+  .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-[#1E3A2B]/20 bg-[#1E3A2B]/5 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#1E3A2B]; }
+  .eyebrow::before { content: ""; width: .45rem; height: .45rem; border-radius: 999px; background: #B85228; }
   .button-primary { @apply inline-flex min-h-11 items-center justify-center rounded-full border border-black bg-black px-6 py-2.5 text-sm font-black text-white hover:-translate-y-0.5 hover:bg-[#2a2a26] disabled:cursor-not-allowed disabled:opacity-50; box-shadow: 0 5px 0 rgba(17,17,15,.14); }
   .button-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-full border border-black/25 bg-transparent px-6 py-2.5 text-sm font-black text-black hover:-translate-y-0.5 hover:border-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-50; }
   .field { @apply min-h-12 w-full rounded-none border-0 border-b border-black/35 bg-transparent px-0 text-black outline-none placeholder:text-black/35 focus:border-black focus:ring-0; }
