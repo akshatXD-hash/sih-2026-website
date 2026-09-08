@@ -1,0 +1,30 @@
+[
+  {
+    "id": "geonames-1269920",
+    "name": "Hubballi",
+    "name_key": "hubballi",
+    "aliases": ["hubli", "hubli city", "hubballi", "hubli dharwad", "hubballi dharwad", "hubli dharwar", "ಹುಬ್ಬಳ್ಳಿ"],
+    "district": "Dharwad",
+    "state": "Karnataka",
+    "pincode": "580020",
+    "kind": "city",
+    "population": 500000,
+    "latitude": 15.3518378,
+    "longitude": 75.1379848,
+    "source_url": "https://www.openstreetmap.org/node/670289984"
+  },
+  {
+    "id": "osm-place-245631974",
+    "name": "Dharwad",
+    "name_key": "dharwad",
+    "aliases": ["dharwad", "dharwar", "dharawada", "hubli dharwad", "hubballi dharwad", "hubli dharwar", "ಧಾರವಾಡ"],
+    "district": "Dharwad",
+    "state": "Karnataka",
+    "pincode": "580001",
+    "kind": "city",
+    "population": 100000,
+    "latitude": 15.4540505,
+    "longitude": 75.0066516,
+    "source_url": "https://www.openstreetmap.org/node/245631974"
+  }
+]

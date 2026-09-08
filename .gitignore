@@ -16,6 +16,7 @@
 /playwright-report/
 /output/
 /tmp/pdfs/
+/tmp/location-import/
 
 # next.js
 /.next/
