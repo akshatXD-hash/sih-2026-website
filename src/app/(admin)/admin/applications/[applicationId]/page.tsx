@@ -1,9 +1,9 @@
+import { DocumentReviewForm } from "@/components/documents/DocumentReviewForm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import {
   addApplicationNoteAction,
-  reviewDocumentAction,
   updateApplicationStatusAction,
 } from "@/app/(admin)/admin/actions";
 import { downloadDocumentAction } from "@/app/(applicant)/documents/actions";
@@ -85,17 +85,12 @@ export default async function AdminApplicationPage({
           <div className="mt-5 space-y-4">
             {application.documents.map((document) => {
               const download = downloadDocumentAction.bind(null, document.id);
-              const review = reviewDocumentAction.bind(null, application.id, document.id);
               return (
                 <article key={document.id} className="rounded-xl border border-slate-200 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-bold">{document.originalFileName}</p><p className="text-xs text-slate-500">{document.type.replaceAll("_", " ")} · {document.status.replaceAll("_", " ")}</p></div><form action={download}><SubmitButton className="button-secondary" pendingLabel="Opening...">Download</SubmitButton></form></div>
                   {document.failureReason && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{document.failureReason}</p>}
                   {document.status !== DocumentStatus.VERIFIED && document.status !== DocumentStatus.REJECTED && (
-                    <form action={review} className="mt-4 flex flex-wrap gap-2">
-                      <input className="field min-w-64 flex-1" name="reason" maxLength={500} placeholder="Reason required when rejecting" aria-label="Rejection reason" />
-                      <button className="button-primary" name="decision" value="verify" type="submit">Verify</button>
-                      <button className="button-secondary border-red-200 text-red-700" name="decision" value="reject" type="submit">Reject</button>
-                    </form>
+                    <DocumentReviewForm applicationId={application.id} documentId={document.id} />
                   )}
                   {document.verifiedBy && <p className="mt-3 text-xs text-slate-500">Reviewed by {document.verifiedBy.name} on {document.verifiedAt?.toLocaleString("en-IN")}</p>}
                 </article>

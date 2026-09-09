@@ -78,21 +78,24 @@ export async function updateApplicationStatusAction(applicationId: string, formD
   revalidatePath(`/admin/applications/${application.id}`);
 }
 
+export interface DocumentReviewState { error?: string; success?: string }
+
 export async function reviewDocumentAction(
   applicationId: string,
   documentId: string,
+  _previousState: DocumentReviewState,
   formData: FormData,
-) {
+): Promise<DocumentReviewState> {
   const user = await requireAdmin();
   const parsedApplicationId = idSchema.safeParse(applicationId);
   const parsedDocumentId = idSchema.safeParse(documentId);
   const decision = z.enum(["verify", "reject"]).safeParse(formData.get("decision"));
   const reason = z.string().trim().max(500).optional().safeParse(formData.get("reason") || undefined);
   if (!parsedApplicationId.success || !parsedDocumentId.success || !decision.success || !reason.success) {
-    throw new Error("Invalid document decision");
+    return { error: "Choose Verify or Reject and keep the reason under 500 characters." };
   }
   if (decision.data === "reject" && !reason.data) {
-    throw new Error("Give the applicant a reason when rejecting a document");
+    return { error: "Enter a reason before rejecting this document, so the applicant knows what to correct." };
   }
 
   const result = await prisma.documentUpload.updateMany({
@@ -107,7 +110,11 @@ export async function reviewDocumentAction(
       verifiedAt: new Date(),
       failureReason: decision.data === "reject" ? reason.data : null,
     },
-  });
-  if (result.count !== 1) notFound();
+  }).catch(() => null);
+  if (!result) return { error: "We could not save the review. Please try again." };
+  if (result.count !== 1) return { error: "This document has already been reviewed or is no longer available. Refresh to see its current status." };
   revalidatePath(`/admin/applications/${parsedApplicationId.data}`);
+  revalidatePath("/applications/new");
+  revalidatePath("/admin");
+  return { success: decision.data === "verify" ? "Document verified." : "Document rejected. The reason is saved for the applicant." };
 }
