@@ -29,23 +29,24 @@ export function DocumentUploadForm({ applicationId }: { applicationId: string })
   const [state, formAction] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className="panel space-y-4">
+    <form id="document-upload-form" action={formAction} className="panel scroll-mt-6 space-y-4">
       <div>
-        <h2 className="text-xl font-bold text-slate-950">Upload supporting documents</h2>
+        <h2 className="text-xl font-bold text-slate-950">Upload your documents here</h2>
         <p className="mt-1 text-sm text-slate-600">
-          PDF, JPEG, PNG, or WebP up to 5 MB. Files are stored as authenticated assets.
+          Choose the document type, select a file, then press Upload document. PDF or image, up to 5 MB per file.
         </p>
       </div>
       <label className="block space-y-1.5">
-        <span className="text-sm font-bold text-slate-700">Document type</span>
-        <select className="field" name="type" required defaultValue="INCOME_PROOF">
+        <span className="text-sm font-bold text-slate-700">1. Which document are you uploading?</span>
+        <select className="field" name="type" required defaultValue="">
+          <option value="" disabled>Select document type</option>
           {documentTypes.map(([value, label]) => (
             <option value={value} key={value}>{label}</option>
           ))}
         </select>
       </label>
       <label className="block space-y-1.5">
-        <span className="text-sm font-bold text-slate-700">File</span>
+        <span className="text-sm font-bold text-slate-700">2. Choose the file from your device</span>
         <input
           className="field py-3"
           type="file"
