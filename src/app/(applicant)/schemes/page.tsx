@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { EligibilityExplanation, eligibilityLabels } from "@/components/schemes/EligibilityExplanation";
 import { notFound } from "next/navigation";
 
 import { selectSchemeAction } from "@/app/(applicant)/actions";
@@ -7,7 +9,7 @@ import { TermSimplifier } from "@/components/ai/TermSimplifier";
 import { Pagination } from "@/components/schemes/Pagination";
 import { SchemeFilters } from "@/components/schemes/SchemeFilters";
 import { requireApplicant } from "@/lib/auth/guards";
-import { matchSchemes } from "@/lib/matching";
+import { evaluateEligibility, matchSchemes } from "@/lib/matching";
 import { prisma } from "@/lib/prisma";
 import {
   filterAndPaginateSchemes,
@@ -32,10 +34,11 @@ export default async function SchemesPage({
     q?: string;
     sort?: string;
     page?: string;
+    status?: string;
   }>;
 }) {
   const user = await requireApplicant();
-  const { applicationId, category, q, sort, page } = await searchParams;
+  const { applicationId, category, q, sort, page, status } = await searchParams;
 
   const [schemes, application] = await Promise.all([
     prisma.loanScheme.findMany({
@@ -69,10 +72,21 @@ export default async function SchemesPage({
         )
       : [];
 
-  const catalogItems: SchemeCatalogItem[] =
-    matches.length > 0
-      ? matches.map((match) => ({ scheme: match.scheme, match }))
-      : schemes.map((scheme) => ({ scheme }));
+  const assessments = new Map(schemes.map(scheme => [scheme.id, application ? evaluateEligibility(application, scheme) : null]));
+  const selectedStatus = status && Object.hasOwn(eligibilityLabels, status) ? status : "ALL";
+  const matchMap = new Map(matches.map(match => [match.scheme.id, match]));
+  const catalogItems: SchemeCatalogItem[] = schemes
+    .filter(scheme => selectedStatus === "ALL" || assessments.get(scheme.id)?.status === selectedStatus)
+    .map(scheme => ({ scheme, match: matchMap.get(scheme.id) }));
+  const statusHref = (value: string) => {
+    const params = new URLSearchParams();
+    if (applicationId) params.set("applicationId", applicationId);
+    if (category) params.set("category", category);
+    if (q) params.set("q", q);
+    if (sort) params.set("sort", sort);
+    params.set("status", value);
+    return "/schemes?" + params.toString();
+  };
 
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
@@ -112,6 +126,11 @@ export default async function SchemesPage({
         <RecommendationExplainer applicationId={application.id} />
       )}
 
+      {application && <nav aria-label="Eligibility results" className="mt-6 flex flex-wrap gap-3">
+        {[["ALL", "All schemes"], ...Object.entries(eligibilityLabels)].map(([key, label]) => <Link key={key} href={statusHref(key)} aria-current={selectedStatus === key ? "page" : undefined} className={selectedStatus === key ? "button-primary" : "button-secondary"}>{label} ({key === "ALL" ? schemes.length : [...assessments.values()].filter(a => a?.status === key).length})</Link>)}
+        <Link className="button-secondary" href={`/applications/new?applicationId=${encodeURIComponent(application.id)}#action-plan`}>My skill readiness & action plan</Link>
+      </nav>}
+
       <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-slate-100 mt-6" />}>
         <SchemeFilters hasMatches={matches.length > 0} />
       </Suspense>
@@ -129,7 +148,7 @@ export default async function SchemesPage({
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           {paginated.items.map(({ scheme, match }) => {
             const action =
-              application && match
+              application?.status === "DRAFT" && match
                 ? selectSchemeAction.bind(null, application.id, scheme.id)
                 : undefined;
             return (
@@ -185,6 +204,7 @@ export default async function SchemesPage({
                     Official scheme source ↗
                   </a>
                 )}
+                {application && assessments.get(scheme.id) && <EligibilityExplanation assessment={assessments.get(scheme.id)!} applicationId={application.id} />}
                 <TermSimplifier
                   text={`${scheme.name}. ${scheme.description}. Interest rate ${scheme.interestRateMin?.toString() ?? "not stated"} to ${scheme.interestRateMax?.toString() ?? "not stated"} percent.`}
                 />

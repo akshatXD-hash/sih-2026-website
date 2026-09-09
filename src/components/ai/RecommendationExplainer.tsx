@@ -20,7 +20,7 @@ export function RecommendationExplainer({ applicationId }: { applicationId: stri
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">AI explanation</p>
           <h2 className="mt-2 text-xl font-bold text-slate-950">Why are these schemes ranked this way?</h2>
-          <p className="mt-1 text-sm text-slate-600">AI explains only the deterministic eligible shortlist shown below.</p>
+          <p className="mt-1 text-sm text-slate-600">AI summarizes only schemes that meet the checked requirements. Open each scheme’s explanation below to review met, unmet or missing rules.</p>
         </div>
         <form action={formAction} className="flex items-center gap-2">
           <select className="field w-auto min-w-28" name="language" defaultValue="en" aria-label="Explanation language">

@@ -76,75 +76,55 @@ function includesCanonical(values: string[], value: string): boolean {
   return values.some((item) => canonical(item) === candidate);
 }
 
+export type EligibilityProfile = { [K in keyof ApplicantProfile]?: ApplicantProfile[K] | null };
+export type CheckStatus = "PASS" | "FAIL" | "UNKNOWN";
+export interface EligibilityCheck {
+  key: string;
+  requirement: string;
+  provided: string;
+  status: CheckStatus;
+  sourceUrl?: string | null;
+}
+export interface EligibilityAssessment {
+  status: "ELIGIBLE" | "INELIGIBLE" | "INFORMATION_MISSING";
+  checks: EligibilityCheck[];
+}
+
+/** The same checks power explanations and the server's selection guard. */
+export function evaluateEligibility(applicant: EligibilityProfile, scheme: Scheme): EligibilityAssessment {
+  const checks: EligibilityCheck[] = [];
+  const add = (key: string, requirement: string, provided: string, status: CheckStatus) =>
+    checks.push({ key, requirement, provided, status, sourceUrl: scheme.sourceUrl });
+  add("active", "Scheme is accepting applications in our catalogue", scheme.isActive ? "Active" : "Inactive", scheme.isActive ? "PASS" : "FAIL");
+  const numeric = (key: "requestedAmount" | "annualIncome" | "age", label: string, min: number | null, max: number | null) => {
+    const raw = applicant[key];
+    const missing = raw == null || (typeof raw === "string" && raw.trim() === "");
+    const value = missing ? null : toNumber(raw, key);
+    const requirement = label + (min == null && max == null ? " must be provided" : ": " + (min ?? 0).toLocaleString("en-IN") + " to " + (max == null ? "no listed upper limit" : max.toLocaleString("en-IN")));
+    add(key, requirement, value == null ? "Not provided" : value.toLocaleString("en-IN"), value == null ? "UNKNOWN" : (min != null && value < min) || (max != null && value > max) || (key === "age" && !Number.isInteger(value)) ? "FAIL" : "PASS");
+  };
+  const minimum = toNumber(scheme.minAmount, "scheme.minAmount");
+  const maximum = toNumber(scheme.maxAmount, "scheme.maxAmount");
+  numeric("requestedAmount", "Requested amount (₹)", minimum, maximum);
+  if (maximum === 0 || minimum > maximum) add("amountConfiguration", "Scheme must have a valid lending range", "Catalogue range needs review", "FAIL");
+  numeric("annualIncome", "Annual income (₹)", scheme.minAnnualIncome == null ? null : toNumber(scheme.minAnnualIncome, "scheme.minAnnualIncome"), scheme.maxAnnualIncome == null ? null : toNumber(scheme.maxAnnualIncome, "scheme.maxAnnualIncome"));
+  if (scheme.minAge != null || scheme.maxAge != null) numeric("age", "Age in years", scheme.minAge ?? null, scheme.maxAge ?? null);
+  const choice = (key: "projectCategory" | "trade" | "gender", label: string, allowed: string[], required = false) => {
+    if (!allowed.length && !required) return;
+    const value = applicant[key]?.trim();
+    add(key, allowed.length ? label + ": " + allowed.join(", ") : label + " must be provided", value || "Not provided", !value ? "UNKNOWN" : !allowed.length || includesCanonical(allowed, value) ? "PASS" : "FAIL");
+  };
+  choice("projectCategory", "Project category", scheme.projectCategories, true);
+  choice("trade", "Trade", scheme.eligibleTrades);
+  choice("gender", "Gender", scheme.eligibleGenders);
+  for (const tag of scheme.eligibleApplicantTags) {
+    add("tag:" + tag, "Applicant category: " + tag.replaceAll("_", " "), applicant.applicantTags == null ? "Not provided" : applicant.applicantTags.join(", ") || "None selected", applicant.applicantTags == null ? "UNKNOWN" : includesCanonical(applicant.applicantTags, tag) ? "PASS" : "FAIL");
+  }
+  return { status: checks.some(c => c.status === "FAIL") ? "INELIGIBLE" : checks.some(c => c.status === "UNKNOWN") ? "INFORMATION_MISSING" : "ELIGIBLE", checks };
+}
+
 function isEligible(applicant: ApplicantProfile, scheme: Scheme): boolean {
-  if (!scheme.isActive) return false;
-
-  const requestedAmount = toNumber(
-    applicant.requestedAmount,
-    "requestedAmount",
-  );
-  const annualIncome = toNumber(applicant.annualIncome, "annualIncome");
-  const minAmount = toNumber(scheme.minAmount, "scheme.minAmount");
-  const maxAmount = toNumber(scheme.maxAmount, "scheme.maxAmount");
-
-  if (maxAmount === 0 || minAmount > maxAmount) return false;
-  if (requestedAmount < minAmount || requestedAmount > maxAmount) return false;
-
-  if (scheme.minAge != null || scheme.maxAge != null) {
-    if (applicant.age == null || !Number.isInteger(applicant.age)) return false;
-    if (scheme.minAge != null && applicant.age < scheme.minAge) return false;
-    if (scheme.maxAge != null && applicant.age > scheme.maxAge) return false;
-  }
-
-  if (
-    scheme.minAnnualIncome != null &&
-    annualIncome < toNumber(scheme.minAnnualIncome, "scheme.minAnnualIncome")
-  ) {
-    return false;
-  }
-
-  if (
-    scheme.maxAnnualIncome != null &&
-    annualIncome > toNumber(scheme.maxAnnualIncome, "scheme.maxAnnualIncome")
-  ) {
-    return false;
-  }
-
-  if (
-    scheme.projectCategories.length > 0 &&
-    !includesCanonical(scheme.projectCategories, applicant.projectCategory)
-  ) {
-    return false;
-  }
-
-  if (
-    scheme.eligibleTrades.length > 0 &&
-    (!applicant.trade ||
-      !includesCanonical(scheme.eligibleTrades, applicant.trade))
-  ) {
-    return false;
-  }
-
-  if (
-    scheme.eligibleGenders.length > 0 &&
-    (!applicant.gender ||
-      !includesCanonical(scheme.eligibleGenders, applicant.gender))
-  ) {
-    return false;
-  }
-
-  if (
-    scheme.eligibleApplicantTags.length > 0 &&
-    !scheme.eligibleApplicantTags.every((requiredTag) =>
-      (applicant.applicantTags ?? []).some(
-        (applicantTag) => canonical(applicantTag) === canonical(requiredTag),
-      ),
-    )
-  ) {
-    return false;
-  }
-
-  return true;
+  return evaluateEligibility(applicant, scheme).status === "ELIGIBLE";
 }
 
 function rankCandidate(
