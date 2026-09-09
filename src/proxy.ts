@@ -28,6 +28,7 @@ export const proxy = auth((request) => {
     applicantRoutes.some((route) => pathname.startsWith(route)) &&
     !hasApplicantAccess(role)
   ) {
+    if (hasAdminAccess(role)) return NextResponse.redirect(new URL("/admin", request.nextUrl));
     return NextResponse.redirect(new URL("/unauthorized", request.nextUrl));
   }
 
