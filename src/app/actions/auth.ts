@@ -7,6 +7,7 @@ import { z } from "zod";
 import { signIn, signOut } from "@/auth";
 import { UserRole } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
+import { loginDestination } from "@/lib/auth/roles";
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address"),
@@ -22,13 +23,6 @@ const registerSchema = loginSchema.extend({
     .regex(/[0-9]/, "Password must contain a number"),
 });
 
-function safeRedirectPath(value: FormDataEntryValue | null): string {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
-    return "/eligibility";
-  }
-  return value;
-}
-
 export async function loginAction(
   _previousState: unknown,
   formData: FormData,
@@ -43,9 +37,10 @@ export async function loginAction(
   }
 
   try {
+    const account = await prisma.user.findUnique({ where: { email: parsed.data.email }, select: { role: true } });
     await signIn("credentials", {
       ...parsed.data,
-      redirectTo: safeRedirectPath(formData.get("next")),
+      redirectTo: loginDestination(account?.role, formData.get("next")),
     });
   } catch (error) {
     if (error instanceof AuthError && error.type === "CredentialsSignin") {

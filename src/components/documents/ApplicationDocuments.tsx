@@ -39,7 +39,7 @@ export function ApplicationDocuments({
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-950">Uploaded documents</h2>
-          <p className="mt-1 text-sm text-slate-600">OCR suggestions require your confirmation.</p>
+          <p className="mt-1 text-sm text-slate-600">Track officer decisions and correction reasons for each file.</p>
         </div>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
           {documents.length}
@@ -70,7 +70,7 @@ export function ApplicationDocuments({
                       {document.type.replaceAll("_", " ")} · {formatBytes(document.sizeBytes)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${document.status === DocumentStatus.REJECTED ? "bg-red-100 text-red-800" : document.status === DocumentStatus.VERIFIED ? "bg-teal-100 text-teal-800" : "bg-slate-100 text-slate-700"}`}>
                     {document.status.replaceAll("_", " ")}
                   </span>
                 </div>
@@ -85,7 +85,7 @@ export function ApplicationDocuments({
                 )}
 
                 {document.failureReason && (
-                  <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{document.failureReason}</p>
+                  <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{document.status === DocumentStatus.REJECTED ? "Rejection reason: " : "Processing issue: "}{document.failureReason}</p>
                 )}
 
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -99,7 +99,7 @@ export function ApplicationDocuments({
                       </SubmitButton>
                     </form>
                   )}
-                  {canManage && extracted.success && !document.ocrConfirmedAt && (
+                  {canManage && extracted.success && !document.ocrConfirmedAt && document.status !== DocumentStatus.REJECTED && document.status !== DocumentStatus.VERIFIED && (
                     <form action={confirmAction}>
                       <SubmitButton pendingLabel="Confirming...">
                         {document.type === DocumentType.INCOME_PROOF
@@ -115,7 +115,7 @@ export function ApplicationDocuments({
                   )}
                   {document.verifiedAt && (
                     <span className="inline-flex items-center rounded-xl bg-blue-50 px-3 text-sm font-bold text-blue-800">
-                      Officer verified
+                      {document.status === DocumentStatus.REJECTED ? "Officer rejected" : document.status === DocumentStatus.VERIFIED ? "Officer verified" : "Officer reviewed"} · {document.verifiedAt.toLocaleString("en-IN")}
                     </span>
                   )}
                 </div>

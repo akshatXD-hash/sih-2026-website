@@ -18,9 +18,16 @@ export function RecommendationExplainer({ applicationId }: { applicationId: stri
     <section className="panel mt-6 border-[#1E3A2B]/15 bg-[#FAF6EE]/90 backdrop-blur-xs">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#1E3A2B]">AI explanation</p>
-          <h2 className="mt-2 text-xl font-bold text-[#191917]">Why are these schemes ranked this way?</h2>
-          <p className="mt-1 text-sm text-[#1E3A2B]/75">AI explains only the deterministic eligible shortlist shown below.</p>
+<p className="text-xs font-black uppercase tracking-[0.16em] text-[#1E3A2B]">
+  AI explanation
+</p>
+<h2 className="mt-2 text-xl font-bold text-[#191917]">
+  Why are these schemes ranked this way?
+</h2>
+<p className="mt-1 text-sm text-[#1E3A2B]/75">
+  AI summarizes only schemes that meet the checked requirements.
+  Open each scheme’s explanation below to review met, unmet or missing rules.
+</p>
         </div>
         <form action={formAction} className="flex items-center gap-2">
           <select className="field w-auto min-w-28" name="language" defaultValue="en" aria-label="Explanation language">

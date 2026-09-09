@@ -1,7 +1,10 @@
 import type { ScoredBranch } from "@/lib/branch-ranking";
+import { savePreferredBankAction } from "@/app/(applicant)/actions";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 import { SchemeSupportBadge } from "@/components/SchemeSupportBadge";
 
-export function DirectoryBranches({ branches, expanded, radiusKm, schemeName, confirmedOnly, lenderName, contactFallback, lenderSourceUrl, locatorUrl }: {
+export function DirectoryBranches({ branches, expanded, radiusKm, schemeName, confirmedOnly, lenderName, contactFallback, lenderSourceUrl, locatorUrl, applicationId, preferredBankId }: {
+  applicationId?: string; preferredBankId?: string | null;
   branches: ScoredBranch[]; expanded: boolean; radiusKm: number;
   schemeName?: string; confirmedOnly?: boolean;
   lenderName?: string; contactFallback?: boolean; lenderSourceUrl?: string; locatorUrl?: string;
@@ -26,6 +29,10 @@ export function DirectoryBranches({ branches, expanded, radiusKm, schemeName, co
         <a className="text-slate-600 underline" href={branch.directorySource?.url} target="_blank" rel="noopener noreferrer">Source map</a>
       </div>
       {schemeName && <div><p className="mb-1 text-xs font-bold">{schemeName}</p><SchemeSupportBadge support={branch.schemeSupport} /></div>}
+      {applicationId && schemeName && branch.schemeSupport?.status !== "NOT_SUPPORTED" && <div>
+        {preferredBankId === branch.id ? <p role="status" className="font-semibold text-teal-700">✓ Preferred branch saved</p> : <form action={savePreferredBankAction.bind(null, applicationId, branch.id)}><SubmitButton pendingLabel="Saving branch…">Choose as preferred branch</SubmitButton></form>}
+        <p className="mt-2 text-xs text-slate-600">Saves your choice. A confirmed application partner is still needed for online submission.</p>
+      </div>}
       <p className="text-xs text-slate-500">{schemeName ? "Support confirmation does not guarantee loan approval or funds." : "Select a scheme above to check branch support."} Map data imported {branch.directorySource?.importedAt.slice(0, 10)}.</p>
       <p className="text-xs text-slate-500">Mapped point: {branch.latitude.toFixed(6)}, {branch.longitude.toFixed(6)}. Confirm the exact branch using the source map or official locator.</p>
     </article>)}

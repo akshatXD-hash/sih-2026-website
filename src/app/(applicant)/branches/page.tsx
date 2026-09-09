@@ -135,7 +135,7 @@ export default async function BranchesPage({ searchParams }: PageProps) {
               return <Link key={place.id} className="block rounded-lg border border-slate-200 p-3 text-sm hover:bg-blue-50" href={"/branches?" + params.toString()}>{placeLabel(place)}</Link>;
             })}
           </section>}
-          {center && <DirectoryBranches {...directory} schemeName={selectedScheme?.name} confirmedOnly={confirmedOnly} lenderName={lender?.name} contactFallback={contactFallback} lenderSourceUrl={lender?.sourceUrl} locatorUrl={lender?.locatorUrl} />}
+          {center && <DirectoryBranches applicationId={application?.status === "DRAFT" ? application.id : undefined} preferredBankId={application?.preferredBankId} {...directory} schemeName={selectedScheme?.name} confirmedOnly={confirmedOnly} lenderName={lender?.name} contactFallback={contactFallback} lenderSourceUrl={lender?.sourceUrl} locatorUrl={lender?.locatorUrl} />}
           <div className="space-y-4">
             {center && <p className="text-sm text-slate-600">Search center: {center.label}. Distances are measured from this point.</p>}
             <div className="flex items-center justify-between">

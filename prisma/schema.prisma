@@ -178,6 +178,7 @@ model Application {
   userId           String            @map("user_id")
   loanSchemeId     String?           @map("loan_scheme_id")
   channelPartnerId String?           @map("channel_partner_id")
+  preferredBankId  String?           @map("preferred_bank_id")
 
   // Structured output accepted from the external FastAPI AI service. These
   // fields stay nullable until extraction has completed.
@@ -202,8 +203,11 @@ model Application {
   loanScheme     LoanScheme?              @relation(fields: [loanSchemeId], references: [id], onDelete: SetNull)
   channelPartner ChannelPartner?          @relation(fields: [channelPartnerId], references: [id], onDelete: SetNull)
   documents      DocumentUpload[]
+  preferredBank BankDirectory? @relation(fields: [preferredBankId], references: [id], onDelete: SetNull)
   notes          ApplicationNote[]
   statusHistory  ApplicationStatusEvent[]
+  planTasks ApplicationTask[]
+  competencies ApplicantCompetency[]
 
   @@index([userId, createdAt])
   @@index([loanSchemeId, status])
@@ -298,6 +302,7 @@ model SearchPlace {
 }
 
 model BankDirectory {
+  preferredApplications Application[]
   branchSupportReviews BranchSchemeSupport[]
   @@index([pincode], map: "bank_directory_pincode_idx")
   id String @id
@@ -333,4 +338,26 @@ model BranchSchemeSupport {
   @@index([schemeId, bankId, id(sort: Desc)], map: "branch_scheme_bank_idx")
   @@index([schemeId, partnerId, id(sort: Desc)], map: "branch_scheme_partner_idx")
   @@map("branch_scheme_support")
+}
+
+model ApplicationTask {
+  id String @id @default(cuid())
+  applicationId String @map("application_id")
+  taskKey String @map("task_key")
+  completedAt DateTime? @map("completed_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@unique([applicationId, taskKey])
+  @@map("application_tasks")
+}
+
+model ApplicantCompetency {
+  id String @id @default(cuid())
+  applicationId String @map("application_id")
+  skillKey String @map("skill_key")
+  level String
+  updatedAt DateTime @updatedAt @map("updated_at")
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@unique([applicationId, skillKey])
+  @@map("applicant_competencies")
 }

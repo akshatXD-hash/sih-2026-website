@@ -1,13 +1,15 @@
 "use server";
 
 import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { ApplicationStatus, Gender } from "@/generated/prisma/enums";
 import { requireApplicant } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 import { matchSchemes } from "@/lib/matching";
-import { partnerSupportsScheme } from "@/lib/branch-scheme-support";
+import { getBranchSchemeSupport, partnerSupportsScheme } from "@/lib/branch-scheme-support";
+import { isAtmListing, schemeLender } from "@/lib/scheme-lender";
 
 const applicantTagSchema = z.enum([
   "SC", "ST", "OBC", "MINORITY", "STREET_VENDOR", "ARTISAN",
@@ -34,6 +36,25 @@ const profileSchema = z.object({
 
 export interface EligibilityActionState {
   error?: string;
+}
+
+export async function updateEligibilityProfileAction(applicationId: string, _state: EligibilityActionState, formData: FormData): Promise<EligibilityActionState> {
+  const user = await requireApplicant();
+  const parsed = profileSchema.safeParse({
+    projectCategory: formData.get("projectCategory"), trade: formData.get("trade") || undefined,
+    gender: formData.get("gender"), age: formData.get("age"), applicantTags: formData.getAll("applicantTags"),
+    suggestedRequestedAmount: formData.get("requestedAmount"), suggestedAnnualIncome: formData.get("annualIncome"),
+  });
+  if (!parsed.success) return { error: "Check your answers. Enter an age from 18 to 100 and valid amounts; blank financial fields remain unknown." };
+  const { suggestedRequestedAmount, suggestedAnnualIncome, ...profile } = parsed.data;
+  const updated = await prisma.application.updateMany({
+    where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT },
+    data: { ...profile, trade: profile.trade ?? null, requestedAmount: suggestedRequestedAmount ?? null,
+      annualIncome: suggestedAnnualIncome ?? null, loanSchemeId: null, channelPartnerId: null, preferredBankId: null },
+  });
+  if (updated.count !== 1) notFound();
+  revalidatePath("/applications/new");
+  redirect(`/schemes?applicationId=${encodeURIComponent(applicationId)}`);
 }
 
 const financeSchema = z.object({
@@ -124,6 +145,7 @@ export async function completeEligibilityAction(
   });
   if (result.count !== 1) notFound();
 
+  revalidatePath("/applications/new");
   redirect(`/schemes?applicationId=${encodeURIComponent(applicationId)}`);
 }
 
@@ -155,10 +177,11 @@ export async function selectSchemeAction(
 
   const result = await prisma.application.updateMany({
     where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT },
-    data: { loanSchemeId: scheme.id, channelPartnerId: null },
+    data: { loanSchemeId: scheme.id, channelPartnerId: null, preferredBankId: null },
   });
   if (result.count !== 1) notFound();
 
+  revalidatePath("/applications/new");
   redirect(`/branches?applicationId=${encodeURIComponent(applicationId)}`);
 }
 
@@ -215,11 +238,34 @@ export async function selectBranchAction(
 
   const result = await prisma.application.updateMany({
     where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT, loanSchemeId: application.loanSchemeId },
-    data: { channelPartnerId: branch.id },
+    data: { channelPartnerId: branch.id, preferredBankId: null },
   });
   if (result.count !== 1) notFound();
 
-  redirect(`/applications/new?applicationId=${encodeURIComponent(applicationId)}`);
+  revalidatePath("/applications/new");
+  redirect(`/applications/new?applicationId=${encodeURIComponent(applicationId)}&saved=branch`);
+}
+
+export async function savePreferredBankAction(applicationId: string, bankId: string) {
+  const user = await requireApplicant();
+  z.string().min(1).max(100).parse(bankId);
+  const application = await prisma.application.findFirst({
+    where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT }, include: { loanScheme: true },
+  });
+  if (!application?.loanScheme) notFound();
+  const bank = await prisma.bankDirectory.findUnique({ where: { id: bankId }, select: { id: true, name: true } });
+  if (!bank || isAtmListing(bank.name)) notFound();
+  const lender = schemeLender(application.loanScheme.slug);
+  if (lender && !new RegExp(lender.namePattern, "i").test(bank.name)) throw new Error("Choose a branch of the scheme lender");
+  const support = await getBranchSchemeSupport(application.loanScheme.id, [bankId], []);
+  if (support.get(`BANK:${bankId}`)?.status === "NOT_SUPPORTED") throw new Error("This branch does not support the selected scheme");
+  const result = await prisma.application.updateMany({
+    where: { id: applicationId, userId: user.id, status: ApplicationStatus.DRAFT, loanSchemeId: application.loanScheme.id },
+    data: { preferredBankId: bankId, channelPartnerId: null },
+  });
+  if (result.count !== 1) notFound();
+  revalidatePath("/applications/new");
+  redirect(`/applications/new?applicationId=${encodeURIComponent(applicationId)}&saved=branch`);
 }
 
 export async function submitApplicationAction(applicationId: string) {
