@@ -34,6 +34,7 @@ export function EligibilityWizard() {
 
   const [voiceAppliedIntent, setVoiceAppliedIntent] = useState<ExtractedVoiceIntent | null>(null);
   const [isVoiceFilled, setIsVoiceFilled] = useState(false);
+  const [intakeMode, setIntakeMode] = useState<"voice" | "text">("voice");
 
   const activeIntent = voiceAppliedIntent
     ? {
@@ -70,227 +71,310 @@ export function EligibilityWizard() {
   }
 
   return (
-    <div className="space-y-6">
-      <VoiceAutoFill onApply={handleVoiceApply} />
+    <div className="space-y-8">
+      {/* AI INTAKE CONTAINER WITH TABS */}
+      <div className="rounded-2xl border border-[#1E3A2B]/15 bg-white/95 p-6 shadow-sm backdrop-blur-xs">
+        <div className="flex flex-col gap-4 border-b border-[#1E3A2B]/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#1E3A2B]">
+                AI Assisted Intake
+              </span>
+            </div>
+            <h2 className="mt-1 text-lg font-black text-[#191917]">
+              Choose how you want to describe your loan requirement
+            </h2>
+          </div>
 
+          {/* Mode Switcher Tabs */}
+          <div className="inline-flex shrink-0 rounded-xl bg-[#FAF6EE] p-1 border border-[#1E3A2B]/15">
+            <button
+              type="button"
+              onClick={() => setIntakeMode("voice")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                intakeMode === "voice"
+                  ? "bg-[#1E3A2B] text-[#F7F3E9] shadow-xs"
+                  : "text-[#1E3A2B]/75 hover:text-[#1E3A2B]"
+              }`}
+            >
+              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              <span>Voice Auto-Fill</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIntakeMode("text")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                intakeMode === "text"
+                  ? "bg-[#1E3A2B] text-[#F7F3E9] shadow-xs"
+                  : "text-[#1E3A2B]/75 hover:text-[#1E3A2B]"
+              }`}
+            >
+              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Type Text</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          {intakeMode === "voice" ? (
+            <VoiceAutoFill onApply={handleVoiceApply} />
+          ) : (
+            <form action={intentAction} className="space-y-4">
+              <input type="hidden" name="language" value="auto" />
+              <div>
+                <p className="text-xs font-bold text-[#1E3A2B]">Describe in any language</p>
+                <p className="text-xs text-[#191917]/70 mt-0.5">
+                  English, हिंदी, मराठी, Hinglish, or your native language. AI will extract form values automatically.
+                </p>
+              </div>
+              <textarea
+                className="w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 p-4 text-sm font-medium text-[#191917] outline-none placeholder:text-[#191917]/40 focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15"
+                rows={3}
+                name="transcript"
+                minLength={10}
+                maxLength={5_000}
+                required
+                aria-label="Describe your loan requirement in your own words"
+                placeholder="Example: I run a tailoring service and need ₹1,20,000. My annual household income is ₹2,40,000. (या हिंदी में: मेरी सिलाई की दुकान है और मुझे ₹1,20,000 की जरूरत है...)"
+              />
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <SubmitButton pendingLabel="Analysing with AI...">Prefill Form with AI</SubmitButton>
+                <span className="text-xs text-[#191917]/50">AI suggestions prefill values for your verification.</span>
+              </div>
+              {intentState.error && (
+                <p aria-live="polite" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-800">
+                  {intentState.error}
+                </p>
+              )}
+              {intentState.intent && !isVoiceFilled && (
+                <div className="rounded-xl border border-[#1E3A2B]/20 bg-emerald-50/80 p-4 text-sm">
+                  <p className="font-bold text-emerald-950">
+                    ✓ Suggestions applied · {Math.round(intentState.intent.confidence * 100)}% confidence
+                  </p>
+                  {intentState.intent.warnings.map((warning) => (
+                    <p className="mt-1 text-xs text-amber-800" key={warning}>⚠️ {warning}</p>
+                  ))}
+                </div>
+              )}
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* VOICE FILLED CONFIRMATION BANNER */}
       {isVoiceFilled && voiceAppliedIntent && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-xs">
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <div>
-              <p className="text-xs font-bold text-emerald-950">
-                Voice Auto-Fill Applied ({Math.round(voiceAppliedIntent.confidence * 100)}% accuracy)
+              <p className="text-xs font-extrabold text-emerald-950">
+                Voice Auto-Fill Applied ({Math.round(voiceAppliedIntent.confidence * 100)}% Accuracy)
               </p>
-              <p className="text-[11px] text-emerald-800">
-                Transcribed from audio in <strong>{voiceAppliedIntent.language.toUpperCase()}</strong>. Review the highlighted fields below.
+              <p className="text-[11px] font-medium text-emerald-800">
+                Transcribed from audio in <strong className="uppercase">{voiceAppliedIntent.language}</strong>. Review and confirm the prefilled details below.
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleUndoVoiceFill}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-xs hover:bg-emerald-50"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-3.5 py-1.5 text-xs font-bold text-emerald-900 shadow-xs hover:bg-emerald-100 cursor-pointer"
           >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
-            Undo Voice Fill
+            Undo Auto-Fill
           </button>
         </div>
       )}
 
-      <form action={intentAction} className="panel border-violet-200 bg-violet-50/40">
-        <input type="hidden" name="language" value="auto" />
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">Text intake</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-800">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-600 animate-pulse" />
-                Auto Multi-lingual
-              </span>
-            </div>
-            <h2 className="mt-2 text-xl font-bold text-slate-950">Or type your need in your own words</h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-              Enter your details in any language (English, हिंदी, मराठी, Hinglish, etc.). The AI automatically identifies the language and prefills the form for your review.
-            </p>
-          </div>
-        </div>
-        <textarea
-          className="field mt-4 min-h-32 py-3"
-          name="transcript"
-          minLength={10}
-          maxLength={5_000}
-          required
-          aria-label="Describe your loan and project requirement in your own words"
-          placeholder="Example: I run a tailoring service and need ₹1,20,000. My annual household income is ₹2,40,000. (या हिंदी में: मेरी सिलाई की दुकान है और मुझे ₹1,20,000 की जरूरत है...)"
-        />
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <SubmitButton pendingLabel="Analysing...">Prefill with AI</SubmitButton>
-          <p className="text-xs text-slate-500">Suggestions do not determine loan eligibility.</p>
-        </div>
-        {intentState.error && (
-          <p aria-live="polite" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-800">
-            {intentState.error}
+      {/* FORM STEP 1 VERIFICATION */}
+      <form action={profileAction} className="rounded-2xl border border-[#1E3A2B]/15 bg-white/95 p-6 sm:p-8 shadow-sm backdrop-blur-xs space-y-6" key={formVersion}>
+        <div className="border-b border-[#1E3A2B]/10 pb-4">
+          <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#B85228]">Step 1 Verification</span>
+          <h2 className="mt-1 text-xl font-black text-[#191917]">Verify basic applicant details</h2>
+          <p className="text-xs font-medium text-[#1E3A2B]/75 mt-0.5">
+            Review the values prefilled by AI or enter manually to proceed to deterministic scheme matching.
           </p>
-        )}
-        {intentState.intent && !isVoiceFilled && (
-          <div className="mt-4 rounded-xl border border-violet-200 bg-white p-4 text-sm">
-            <p className="font-bold text-violet-900">
-              Suggestions applied · {Math.round(intentState.intent.confidence * 100)}% model confidence
-            </p>
-            {intentState.intent.warnings.map((warning) => (
-              <p className="mt-1 text-amber-800" key={warning}>{warning}</p>
-            ))}
-          </div>
-        )}
-      </form>
+        </div>
 
-      <form action={profileAction} className="panel grid gap-6 sm:grid-cols-2" key={formVersion}>
         {profileState.error && (
-          <p aria-live="polite" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800 sm:col-span-2">
+          <p aria-live="polite" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
             {profileState.error}
           </p>
         )}
 
-        <label className="space-y-2 sm:col-span-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-700">Project category</span>
-            {isVoiceFilled && activeIntent?.projectCategory && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-800">
-                ⚡ Auto-filled by Voice
-              </span>
-            )}
-          </div>
-          <select
-            className={`field transition-colors ${isVoiceFilled && activeIntent?.projectCategory ? "border-violet-400 bg-violet-50/20 ring-2 ring-violet-100" : ""
-              }`}
-            name="projectCategory"
-            required
-            defaultValue={activeIntent?.projectCategory ?? ""}
-          >
-            <option value="" disabled>Select a category</option>
-            <option value="micro-enterprise">Micro enterprise</option>
-            <option value="agriculture-allied">Agriculture allied</option>
-            <option value="manufacturing">Manufacturing</option>
-            <option value="services">Services</option>
-            <option value="trading">Trading</option>
-            <option value="higher-education-india">Higher education in India</option>
-            <option value="higher-education-abroad">Higher education abroad</option>
-            <option value="vocational-education">Vocational education</option>
-          </select>
-        </label>
-        <label className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-700">Trade or occupation</span>
-            {isVoiceFilled && activeIntent?.trade && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-800">
-                Auto-filled by Voice
-              </span>
-            )}
-          </div>
-          <input
-            className={`field transition-colors ${isVoiceFilled && activeIntent?.trade ? "border-violet-400 bg-violet-50/20 ring-2 ring-violet-100" : ""
-              }`}
-            name="trade"
-            defaultValue={activeIntent?.trade ?? ""}
-            placeholder="e.g. tailoring"
-          />
-        </label>
-        <label className="space-y-2">
-          <span className="text-sm font-bold text-slate-700">Age</span>
-          <input className="field" type="number" name="age" min="18" max="100" required placeholder="e.g. 28" />
-        </label>
-        <fieldset className="space-y-3 sm:col-span-2">
-          <legend className="text-sm font-bold text-slate-700">Applicant groups (select every group that applies)</legend>
-          <p className="text-xs text-slate-500">This is used only for deterministic eligibility checks. Leave all unchecked if none apply.</p>
-          <div className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-3">
-            {applicantGroups.map(([value, label]) => (
-              <label className="flex items-start gap-2 text-sm text-slate-700" key={value}>
-                <input className="mt-1 h-4 w-4 accent-teal-700" type="checkbox" name="applicantTags" value={value} />
-                <span>{label}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <label className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-700">Gender</span>
-            {isVoiceFilled && activeIntent?.suggestedGender && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-800">
-                Suggested by Voice
-              </span>
-            )}
-          </div>
-          <select
-            className={`field transition-colors ${isVoiceFilled && activeIntent?.suggestedGender ? "border-violet-400 bg-violet-50/20 ring-2 ring-violet-100" : ""
-              }`}
-            name="gender"
-            required
-            defaultValue={activeIntent?.suggestedGender ?? "PREFER_NOT_TO_SAY"}
-          >
-            <option value="FEMALE">Female</option>
-            <option value="MALE">Male</option>
-            <option value="TRANSGENDER">Transgender</option>
-            <option value="NON_BINARY">Non-binary</option>
-            <option value="OTHER">Other</option>
-            <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
-          </select>
-        </label>
-        {activeIntent && (
-          <div className="grid gap-4 rounded-xl border border-teal-200 bg-teal-50/50 p-4 sm:col-span-2 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <p className="font-bold text-teal-950">Review the AI-filled financial values</p>
-              <p className="mt-1 text-xs text-teal-800">These will prefill step 2 and can still be changed there.</p>
-            </div>
-            <label className="space-y-2">
+        {/* SECTION 1: ACTIVITY & DEMOGRAPHICS */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">1. Activity & Demographics</h3>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="space-y-1.5 sm:col-span-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-700">Requested amount</span>
-                {isVoiceFilled && activeIntent.requestedAmount && (
-                  <span className="text-[10px] font-bold text-teal-800">⚡ Extracted ₹{activeIntent.requestedAmount.toLocaleString("en-IN")}</span>
+                <span className="text-xs font-bold text-[#191917]">Project Category *</span>
+                {isVoiceFilled && activeIntent?.projectCategory && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#1E3A2B]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#1E3A2B]">
+                    ✓ Auto-filled by Voice
+                  </span>
+                )}
+              </div>
+              <select
+                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${
+                  isVoiceFilled && activeIntent?.projectCategory ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
+                }`}
+                name="projectCategory"
+                required
+                defaultValue={activeIntent?.projectCategory ?? ""}
+              >
+                <option value="" disabled>Select project category...</option>
+                <option value="micro-enterprise">Micro enterprise</option>
+                <option value="agriculture-allied">Agriculture allied</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="services">Services</option>
+                <option value="trading">Trading</option>
+                <option value="higher-education-india">Higher education in India</option>
+                <option value="higher-education-abroad">Higher education abroad</option>
+                <option value="vocational-education">Vocational education</option>
+              </select>
+            </label>
+
+            <label className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#191917]">Trade or Occupation</span>
+                {isVoiceFilled && activeIntent?.trade && (
+                  <span className="text-[10px] font-bold text-[#1E3A2B]">✓ Auto-filled</span>
                 )}
               </div>
               <input
-                className="field"
+                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${
+                  isVoiceFilled && activeIntent?.trade ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
+                }`}
+                name="trade"
+                defaultValue={activeIntent?.trade ?? ""}
+                placeholder="e.g. Tailoring, Carpentry, Pottery"
+              />
+            </label>
+
+            <label className="space-y-1.5">
+              <span className="text-xs font-bold text-[#191917]">Age *</span>
+              <input
+                className="w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15"
+                type="number"
+                name="age"
+                min="18"
+                max="100"
+                required
+                placeholder="e.g. 28"
+              />
+            </label>
+
+            <label className="space-y-1.5 sm:col-span-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#191917]">Gender *</span>
+                {isVoiceFilled && activeIntent?.suggestedGender && (
+                  <span className="text-[10px] font-bold text-[#1E3A2B]">✓ Suggested by Voice</span>
+                )}
+              </div>
+              <select
+                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${
+                  isVoiceFilled && activeIntent?.suggestedGender ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
+                }`}
+                name="gender"
+                required
+                defaultValue={activeIntent?.suggestedGender ?? "PREFER_NOT_TO_SAY"}
+              >
+                <option value="FEMALE">Female</option>
+                <option value="MALE">Male</option>
+                <option value="TRANSGENDER">Transgender</option>
+                <option value="NON_BINARY">Non-binary</option>
+                <option value="OTHER">Other</option>
+                <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        {/* SECTION 2: FINANCIAL PARAMETERS */}
+        <div className="space-y-4 pt-2 border-t border-[#1E3A2B]/10">
+          <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">2. Financial Parameters</h3>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#191917]">Requested Loan Amount (₹)</span>
+                {isVoiceFilled && activeIntent?.requestedAmount && (
+                  <span className="text-[10px] font-bold text-[#B85228]">⚡ Extracted</span>
+                )}
+              </div>
+              <input
+                className="w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-bold text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15"
                 type="number"
                 name="suggestedRequestedAmount"
                 min="1"
                 max="50000000"
-                defaultValue={activeIntent.requestedAmount ?? ""}
+                defaultValue={activeIntent?.requestedAmount ?? ""}
+                placeholder="e.g. 150000"
               />
             </label>
-            <label className="space-y-2">
+
+            <label className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-700">Annual household income</span>
-                {isVoiceFilled && activeIntent.annualIncome ? (
-                  <span className="text-[10px] font-bold text-teal-800">⚡ Extracted ₹{activeIntent.annualIncome.toLocaleString("en-IN")}</span>
-                ) : null}
+                <span className="text-xs font-bold text-[#191917]">Annual Household Income (₹)</span>
+                {isVoiceFilled && activeIntent?.annualIncome && (
+                  <span className="text-[10px] font-bold text-[#B85228]">⚡ Extracted</span>
+                )}
               </div>
               <input
-                className="field"
+                className="w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-bold text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15"
                 type="number"
                 name="suggestedAnnualIncome"
                 min="0"
                 max="100000000"
-                defaultValue={activeIntent.annualIncome ?? ""}
+                defaultValue={activeIntent?.annualIncome ?? ""}
+                placeholder="e.g. 240000"
               />
             </label>
-            {activeIntent.suggestedGender && (
-              <label className="flex items-start gap-3 sm:col-span-2">
-                <input className="mt-1 h-4 w-4 accent-teal-700" type="checkbox" required />
-                <span className="text-sm text-slate-700">I reviewed the AI-suggested gender and confirm the selected value is correct.</span>
-              </label>
-            )}
           </div>
-        )}
-        <div className="sm:col-span-2">
-          <button className="button-primary" type="submit">Continue to financial details</button>
+
+          {activeIntent?.suggestedGender && (
+            <label className="flex items-start gap-3 rounded-xl border border-[#1E3A2B]/15 bg-[#FAF6EE] p-3.5">
+              <input className="mt-0.5 size-4 rounded border-[#1E3A2B]/30 text-[#1E3A2B] focus:ring-[#1E3A2B]" type="checkbox" required />
+              <span className="text-xs font-bold text-[#191917]">
+                I reviewed the AI-suggested gender parameter and confirm the selected value is accurate.
+              </span>
+            </label>
+          )}
+        </div>
+
+        {/* SECTION 3: APPLICANT GROUPS */}
+        <div className="space-y-3 pt-2 border-t border-[#1E3A2B]/10">
+          <div>
+            <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">3. Applicant Category Tags</h3>
+            <p className="text-xs text-[#191917]/70 mt-0.5">Select every group that applies to your household for target scheme subsidies.</p>
+          </div>
+          <div className="grid gap-2.5 rounded-xl border border-[#1E3A2B]/15 bg-[#FAF6EE]/40 p-4 sm:grid-cols-2 lg:grid-cols-3 max-h-60 overflow-y-auto">
+            {applicantGroups.map(([value, label]) => (
+              <label className="flex items-center gap-2.5 rounded-lg p-1.5 hover:bg-[#1E3A2B]/5 cursor-pointer text-xs font-bold text-[#191917]" key={value}>
+                <input className="size-4 rounded border-[#1E3A2B]/30 text-[#1E3A2B] focus:ring-[#1E3A2B]" type="checkbox" name="applicantTags" value={value} />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* SUBMIT BUTTON */}
+        <div className="pt-4 border-t border-[#1E3A2B]/10 flex items-center justify-end">
+          <button className="button-primary bg-[#1E3A2B] hover:bg-[#162E21] text-[#F7F3E9] border-none px-8 py-3.5 text-sm font-extrabold rounded-xl shadow-md shadow-[#1E3A2B]/20 cursor-pointer transition-all" type="submit">
+            Continue to Financial Details →
+          </button>
         </div>
       </form>
     </div>
   );
-}
+}

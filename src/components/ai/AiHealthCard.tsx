@@ -16,7 +16,7 @@ export function AiHealthCard() {
   return (
     <section className="panel mt-6 flex flex-wrap items-center justify-between gap-4">
       <div>
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">AI service diagnostics</p>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-[#1E3A2B]">AI service diagnostics</p>
         <h2 className="mt-2 text-xl font-bold text-slate-950">External FastAPI service</h2>
         <p className="mt-1 text-sm text-slate-600">
           {state.checked

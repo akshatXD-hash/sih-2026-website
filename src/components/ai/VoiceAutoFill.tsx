@@ -270,11 +270,11 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
   }
 
   return (
-    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/50 via-white to-indigo-50/30 p-5 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100/80 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-200">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="rounded-2xl border border-[#1E3A2B]/15 bg-[#FAF6EE] p-5 shadow-sm sm:p-6">
+      <div className="flex flex-col gap-4 border-b border-[#1E3A2B]/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3.5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#1E3A2B] text-[#F7F3E9] shadow-md shadow-[#1E3A2B]/15">
+            <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -284,26 +284,23 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
             </svg>
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900">Voice-to-Form Auto-Fill</h3>
-              <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-0.5 text-[11px] font-semibold text-violet-800">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-600 animate-pulse" />
-                Groq Whisper (v3-Turbo)
-              </span>
+            <div>
+              <h3 className="text-base font-extrabold text-[#191917]">Voice-to-Form Auto-Fill</h3>
             </div>
-            <p className="text-xs text-slate-600">
+            <p className="mt-0.5 text-xs font-medium text-[#1E3A2B]/75">
               Speak in Hindi, English, Marathi or your regional language to automatically fill this form.
             </p>
           </div>
         </div>
+
         {state === "idle" && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="voice-language-select" className="text-xs font-semibold text-slate-600">
+          <div className="flex shrink-0 items-center gap-2">
+            <label htmlFor="voice-language-select" className="whitespace-nowrap text-xs font-bold text-[#1E3A2B]/80">
               Language:
             </label>
             <select
               id="voice-language-select"
-              className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 shadow-xs focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="rounded-lg border border-[#1E3A2B]/20 bg-white px-3 py-1.5 text-xs font-bold text-[#191917] shadow-xs focus:border-[#1E3A2B] focus:outline-none focus:ring-2 focus:ring-[#1E3A2B]/20"
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
               disabled={disabled || state !== "idle"}
@@ -320,7 +317,7 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
 
       {error && (
         <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-medium text-red-800">
-          <svg className="mt-0.5 h-4 w-4 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="mt-0.5 size-4 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div className="flex-1">{error}</div>
@@ -336,12 +333,12 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
       )}
 
       {state === "idle" && (
-        <div className="mt-4 flex flex-col items-center justify-center gap-4 py-2 sm:flex-row sm:justify-between">
-          <div className="space-y-1 text-center sm:text-left">
-            <p className="text-xs font-semibold text-slate-700">
+        <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-extrabold text-[#1E3A2B]">
               Try saying:
             </p>
-            <p className="text-xs italic text-slate-500">
+            <p className="text-xs font-medium italic text-[#191917]/70">
               &ldquo;मैं एक महिला दर्जी हूँ, मुझे सिलाई मशीन के लिए ₹50,000 का लोन चाहिए&rdquo; or &ldquo;I run a small carpentry workshop and need a loan of 1.5 lakhs&rdquo;
             </p>
           </div>
@@ -350,16 +347,16 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
             type="button"
             onClick={startRecording}
             disabled={disabled}
-            className="group relative inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-violet-200 transition-all duration-200 hover:from-violet-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-violet-300 disabled:opacity-50 cursor-pointer"
+            className="group relative inline-flex shrink-0 whitespace-nowrap items-center gap-2.5 rounded-xl bg-[#1E3A2B] px-5 py-3 text-sm font-extrabold text-[#F7F3E9] shadow-md shadow-[#1E3A2B]/20 transition-all duration-200 hover:bg-[#162E21] hover:shadow-lg hover:shadow-[#1E3A2B]/30 disabled:opacity-50 cursor-pointer"
           >
-            <span className="relative flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-300 opacity-75"></span>
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-white"></span>
+            <span className="relative flex size-3 shrink-0 items-center justify-center">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#D99B26] opacity-75"></span>
+              <span className="relative inline-flex size-2 rounded-full bg-[#F7F3E9]"></span>
             </span>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="size-4 shrink-0 text-[#D99B26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
-            Speak to Auto-Fill Form
+            <span>Speak to Auto-Fill Form</span>
           </button>
         </div>
       )}
@@ -396,7 +393,7 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
             <button
               type="button"
               onClick={cancelRecording}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+              className="rounded-xl border border-[#1E3A2B]/20 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
             >
               Cancel
             </button>
@@ -405,16 +402,16 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
       )}
 
       {state === "processing" && (
-        <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border border-violet-200 bg-violet-50/40 p-6 text-center">
+        <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border border-[#1E3A2B]/20 bg-[#1E3A2B]/5 p-6 text-center">
           <div className="relative flex h-10 w-10 items-center justify-center">
-            <div className="absolute h-10 w-10 animate-spin rounded-full border-3 border-violet-200 border-t-violet-700" />
-            <svg className="h-5 w-5 text-violet-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="absolute h-10 w-10 animate-spin rounded-full border-3 border-[#1E3A2B]/20 border-t-[#1E3A2B]" />
+            <svg className="h-5 w-5 text-[#1E3A2B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm font-bold text-violet-950">Transcribing Speech with Groq Whisper...</p>
-            <p className="mt-0.5 text-xs text-violet-700">
+            <p className="text-sm font-bold text-[#1E3A2B]">Transcribing Speech with Groq Whisper...</p>
+            <p className="mt-0.5 text-xs text-[#1E3A2B]/75">
               Detecting language and extracting structured applicant parameters with AI/ML microservice...
             </p>
           </div>
@@ -423,9 +420,9 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
 
       {state === "review" && extractedIntent && (
         <div className="mt-4 space-y-4">
-          <div className="rounded-xl border border-violet-200 bg-white p-4 shadow-xs">
+          <div className="rounded-xl border border-[#1E3A2B]/15 bg-white p-4 shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-violet-700">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#1E3A2B]">
                 Captured Voice Transcript
               </span>
               <div className="flex items-center gap-2">
@@ -440,13 +437,13 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
             <p className="mt-2 text-sm italic text-slate-800">&ldquo;{transcript}&rdquo;</p>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          <div className="rounded-xl border border-[#1E3A2B]/15 bg-white p-4 shadow-xs">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#1E3A2B]">
               AI Extracted Form Parameters
             </h4>
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="rounded-lg bg-slate-50 p-2.5">
-                <span className="text-[11px] font-semibold text-slate-500">Project Category</span>
+              <div className="rounded-lg bg-[#FAF6EE] p-2.5">
+                <span className="text-[11px] font-semibold text-[#1E3A2B]/60">Project Category</span>
                 <p className="text-sm font-bold capitalize text-slate-900">
                   {extractedIntent.projectCategory ? (
                     <span className="inline-flex items-center gap-1 text-emerald-700">
@@ -458,8 +455,8 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
                 </p>
               </div>
 
-              <div className="rounded-lg bg-slate-50 p-2.5">
-                <span className="text-[11px] font-semibold text-slate-500">Trade / Activity</span>
+              <div className="rounded-lg bg-[#FAF6EE] p-2.5">
+                <span className="text-[11px] font-semibold text-[#1E3A2B]/60">Trade / Activity</span>
                 <p className="text-sm font-bold capitalize text-slate-900">
                   {extractedIntent.trade ? (
                     <span className="inline-flex items-center gap-1 text-emerald-700">
@@ -471,8 +468,8 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
                 </p>
               </div>
 
-              <div className="rounded-lg bg-slate-50 p-2.5">
-                <span className="text-[11px] font-semibold text-slate-500">Requested Loan Amount</span>
+              <div className="rounded-lg bg-[#FAF6EE] p-2.5">
+                <span className="text-[11px] font-semibold text-[#1E3A2B]/60">Requested Loan Amount</span>
                 <p className="text-sm font-bold text-slate-900">
                   {extractedIntent.requestedAmount ? (
                     <span className="inline-flex items-center gap-1 text-emerald-700">
@@ -484,8 +481,8 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
                 </p>
               </div>
 
-              <div className="rounded-lg bg-slate-50 p-2.5">
-                <span className="text-[11px] font-semibold text-slate-500">Annual Family Income</span>
+              <div className="rounded-lg bg-[#FAF6EE] p-2.5">
+                <span className="text-[11px] font-semibold text-[#1E3A2B]/60">Annual Family Income</span>
                 <p className="text-sm font-bold text-slate-900">
                   {extractedIntent.annualIncome ? (
                     <span className="inline-flex items-center gap-1 text-emerald-700">
@@ -514,14 +511,14 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
                 setState("idle");
                 setExtractedIntent(null);
               }}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+              className="rounded-xl border border-[#1E3A2B]/20 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
             >
               Discard & Speak Again
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-200 hover:bg-emerald-700 cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-200 hover:bg-emerald-800 cursor-pointer"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
