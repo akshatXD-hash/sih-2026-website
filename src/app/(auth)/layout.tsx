@@ -16,15 +16,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute inset-0 bg-gradient-to-br from-[#042119]/92 via-[#062e23]/85 to-[#031812]/96 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#042119]/95 via-transparent to-[#042119]/70" />
 
-        {/* Subtle Dot Grid Matrix */}
-        <div 
-          className="absolute inset-0 opacity-20 pointer-events-none" 
-          style={{ 
-            backgroundImage: "radial-gradient(circle at 1px 1px, rgba(212, 163, 64, 0.7) 1px, transparent 0)", 
-            backgroundSize: "24px 24px" 
-          }} 
-        />
-
         {/* Top Header inside Left Hero */}
         <div className="relative z-10 flex items-center gap-3.5">
           <Image

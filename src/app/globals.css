@@ -66,29 +66,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline-offset: 3px;
 }
 
-.editorial-grid {
-  background-image: linear-gradient(rgba(255,255,255,.11) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.11) 1px, transparent 1px);
-  background-size: min(12.5vw, 180px) min(12.5vw, 180px);
-}
-
-.paper-grid {
-  background-image: linear-gradient(rgba(17,17,15,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,15,.055) 1px, transparent 1px);
-  background-size: 72px 72px;
-}
-
-.artisan-paper-grid {
-  background-image: 
-    linear-gradient(rgba(30, 58, 43, 0.035) 1px, transparent 1px), 
-    linear-gradient(90deg, rgba(30, 58, 43, 0.035) 1px, transparent 1px);
-  background-size: 64px 64px;
-}
-
 .artisan-panel {
   border: 1px solid rgba(30, 58, 43, 0.15);
-  background-color: rgba(250, 246, 238, 0.88);
-  backdrop-filter: blur(8px);
+  background-color: #faf9f4;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 20px -4px rgba(30, 58, 43, 0.06);
+  box-shadow: none;
 }
 
 .display-title { font-size: clamp(3.4rem, 8.2vw, 8.5rem); font-weight: 800; letter-spacing: -.075em; line-height: .82; }
@@ -97,10 +79,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 @layer components {
   .page-shell { @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-10; }
-  .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-[#1E3A2B]/20 bg-[#1E3A2B]/5 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#1E3A2B]; }
-  .eyebrow::before { content: ""; width: .45rem; height: .45rem; border-radius: 999px; background: #B85228; }
-  .button-primary { @apply inline-flex min-h-11 items-center justify-center rounded-full border border-black bg-black px-6 py-2.5 text-sm font-black text-white hover:-translate-y-0.5 hover:bg-[#2a2a26] disabled:cursor-not-allowed disabled:opacity-50; box-shadow: 0 5px 0 rgba(17,17,15,.14); }
-  .button-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-full border border-black/25 bg-transparent px-6 py-2.5 text-sm font-black text-black hover:-translate-y-0.5 hover:border-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-50; }
+  .eyebrow { @apply inline-block text-xs font-semibold tracking-wide text-[#1E3A2B]; }
+  .button-primary { @apply inline-flex min-h-11 items-center justify-center rounded-md border border-black bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2a2a26] disabled:cursor-not-allowed disabled:opacity-50; }
+  .button-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-md border border-black/25 bg-transparent px-6 py-2.5 text-sm font-semibold text-black hover:border-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-50; }
   .field { @apply min-h-12 w-full rounded-none border-0 border-b border-black/35 bg-transparent px-0 text-black outline-none placeholder:text-black/35 focus:border-black focus:ring-0; }
   textarea.field { @apply border border-black/25 bg-white/60 px-4; }
   select.field { @apply pr-8; }
@@ -110,5 +91,5 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
