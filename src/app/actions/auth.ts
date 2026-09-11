@@ -36,8 +36,14 @@ export async function loginAction(
     return { errors: parsed.error.flatten().fieldErrors };
   }
 
+  let account;
   try {
-    const account = await prisma.user.findUnique({ where: { email: parsed.data.email }, select: { role: true } });
+    account = await prisma.user.findUnique({ where: { email: parsed.data.email }, select: { role: true } });
+  } catch {
+    return { message: "Sign-in is temporarily unavailable. Please try again shortly." };
+  }
+
+  try {
     await signIn("credentials", {
       ...parsed.data,
       redirectTo: loginDestination(account?.role, formData.get("next")),
@@ -45,6 +51,9 @@ export async function loginAction(
   } catch (error) {
     if (error instanceof AuthError && error.type === "CredentialsSignin") {
       return { message: "Email or password is incorrect." };
+    }
+    if (error instanceof AuthError) {
+      return { message: "Sign-in is temporarily unavailable. Please try again shortly." };
     }
     throw error;
   }
@@ -64,15 +73,15 @@ export async function registerAction(
     return { errors: parsed.error.flatten().fieldErrors };
   }
 
-  const existing = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-    select: { id: true },
-  });
-  if (existing) {
-    return { message: "An account already exists for this email." };
-  }
-
   try {
+    const existing = await prisma.user.findUnique({
+      where: { email: parsed.data.email },
+      select: { id: true },
+    });
+    if (existing) {
+      return { message: "An account already exists for this email." };
+    }
+
     await prisma.user.create({
       data: {
         name: parsed.data.name,
