@@ -31,8 +31,25 @@ export function AppShell({ children, user, mode }: AppShellProps) {
 
   return (
     <div className="relative min-h-screen bg-[#F7F3E9] text-[#191917] selection:bg-[#B85228] selection:text-white lg:grid lg:grid-cols-[270px_1fr]">
+      {/* Background Image Layer */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-60 mix-blend-multiply"
+        style={{ backgroundImage: "url('/images/artisan-bg.jpg')" }}
+      />
+
+      {/* Decorative Organic Corner Shapes & Mandala Accents */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed -bottom-24 -right-24 z-0 h-96 w-96 rounded-full bg-[#1E3A2B]/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed -top-24 -left-24 z-0 h-96 w-96 rounded-full bg-[#B85228]/10 blur-3xl"
+      />
+
       {/* Sidebar Navigation */}
-      <aside className="relative z-20 hidden min-h-screen border-r border-[#1E3A2B]/15 bg-[#FAF6EE] p-7 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
+      <aside className="relative z-20 hidden min-h-screen border-r border-[#1E3A2B]/15 bg-[#FAF6EE]/90 p-7 backdrop-blur-md lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
         <BrandMark href={home} />
         <div className="mt-14">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E3A2B]/50">
@@ -69,7 +86,7 @@ export function AppShell({ children, user, mode }: AppShellProps) {
 
       {/* Main Content & Mobile Header Wrapper */}
       <div className="relative z-10 min-w-0">
-        <header className="sticky top-0 z-40 border-b border-[#1E3A2B]/15 bg-[#FAF6EE] lg:hidden">
+        <header className="sticky top-0 z-40 border-b border-[#1E3A2B]/15 bg-[#FAF6EE]/95 backdrop-blur lg:hidden">
           <div className="flex items-center justify-between px-5 py-4">
             <BrandMark href={home} />
             <SignOutButton />
@@ -87,7 +104,7 @@ export function AppShell({ children, user, mode }: AppShellProps) {
           </nav>
         </header>
 
-        <main className="relative z-10 min-h-screen px-5 py-9 sm:px-8 lg:px-12 lg:py-12 xl:px-16">
+        <main className="artisan-paper-grid relative z-10 min-h-screen px-5 py-9 sm:px-8 lg:px-12 lg:py-12 xl:px-16">
           {children}
         </main>
       </div>

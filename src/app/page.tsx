@@ -41,7 +41,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="page-shell py-24 sm:py-32" id="process">
+      <section className="paper-grid page-shell py-24 sm:py-32" id="process">
         <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
           <div><span className="eyebrow">How it works</span><h2 className="mt-8 text-4xl font-semibold leading-[1.12] tracking-tight sm:text-5xl">From your first question<br /><span className="editorial-serif">to an application.</span></h2></div>
           <div className="border-t border-black">

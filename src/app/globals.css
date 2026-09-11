@@ -46,9 +46,9 @@
 
 * { border-color: var(--line); }
 html { scroll-behavior: smooth; }
-body { 
-  background: var(--background); 
-  color: var(--foreground); 
+body {
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -66,11 +66,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline-offset: 3px;
 }
 
+.editorial-grid {
+  background-image: linear-gradient(rgba(255,255,255,.11) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.11) 1px, transparent 1px);
+  background-size: min(12.5vw, 180px) min(12.5vw, 180px);
+}
+
+.paper-grid {
+  background-image: linear-gradient(rgba(17,17,15,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,15,.055) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+.artisan-paper-grid {
+  background-image:
+    linear-gradient(rgba(30, 58, 43, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 58, 43, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
 .artisan-panel {
   border: 1px solid rgba(30, 58, 43, 0.15);
-  background-color: #faf9f4;
+  background-color: rgba(250, 246, 238, 0.88);
+  backdrop-filter: blur(8px);
   border-radius: 0.5rem;
-  box-shadow: none;
+  box-shadow: 0 4px 20px -4px rgba(30, 58, 43, 0.06);
 }
 
 .display-title { font-size: clamp(3.4rem, 8.2vw, 8.5rem); font-weight: 800; letter-spacing: -.075em; line-height: .82; }
