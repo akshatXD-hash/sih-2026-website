@@ -1,9 +1,42 @@
 # Kaarva — SIH Scheme Matching Platform
 
-Fullstack application built with Next.js App Router, TypeScript, Tailwind CSS,
-Prisma, and Neon PostgreSQL with PostGIS. AI/ML is an external FastAPI service;
-this repository validates and consumes its output through a swappable mock or
-remote adapter.
+Kaarva helps applicants discover loan schemes, understand eligibility, find
+nearby branches, and prepare an application for officer review. Built for SIH
+2026, it brings the journey from an initial funding need to document review
+into one website.
+
+**AI assists. Rules decide.** Eligibility is checked against structured scheme
+rules; AI helps interpret language and documents. A human officer makes the
+lending decision, and the generated pre-sanction PDF is provisional.
+
+## What the website includes
+
+- An authenticated eligibility wizard with text and multilingual voice input.
+- Explainable scheme results showing matched rules, unmet requirements, and
+  missing information, with links to scheme sources.
+- City, village, and PIN-code search, mapped banks, and ranked application
+  partners, with branch-specific scheme support reviewed by officers.
+- Editable applicant profiles, skill readiness exercises, and saved preparation
+  plans. Learning progress does not determine eligibility or approval.
+- Document uploads, OCR-assisted income extraction, an EMI/moratorium calculator,
+  and provisional PDF downloads.
+- An officer dashboard for document review, private notes, application status
+  changes, audit history, and branch scheme verification.
+
+## Technology
+
+| Layer | Implementation |
+| --- | --- |
+| Web application | Next.js 16 App Router, React 19, TypeScript |
+| Styling and maps | Tailwind CSS 4, Leaflet |
+| Database | Prisma 7, Neon PostgreSQL, PostGIS |
+| Authentication and validation | Auth.js, Zod |
+| Documents | Cloudinary authenticated assets, pdf-lib |
+| AI and voice | External FastAPI adapter, Groq speech transcription |
+| Checks | Vitest, ESLint |
+
+The AI model service is maintained separately. This repository validates and
+consumes its output through a swappable mock or remote adapter.
 
 See [`IMPLEMENTATION_PHASES.md`](./IMPLEMENTATION_PHASES.md) for the
 authoritative project sequence and its review checkpoints.
@@ -38,7 +71,22 @@ officer dashboard locally, set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`
 (12+ characters) in `.env`, rerun `npm run db:seed`, and sign in at `/login`.
 The seed never contains a hardcoded password.
 
-## Phase 2 routes and authorization
+## Routes and authorization
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Public introduction to Kaarva |
+| `/register`, `/login` | Account creation and sign-in |
+| `/eligibility` | Start an owned application draft |
+| `/eligibility/[applicationId]/finance` | Complete financial details |
+| `/schemes` | Compare eligibility results and scheme terms |
+| `/branches` | Find banks and select an eligible application partner |
+| `/applications/[applicationId]/profile` | Review or update draft answers |
+| `/applications/new` | Prepare documents, action plan, and application |
+| `/assistant` | Scheme questions and answers |
+| `/admin` | Officer application dashboard |
+| `/admin/applications/[applicationId]` | Review an individual application |
+| `/admin/branch-support` | Record branch scheme evidence; ADMIN and REVIEWER only |
 
 - `/eligibility` is a two-step applicant wizard that creates an owned draft.
 - `/schemes`, `/branches`, and `/applications/new` continue the applicant flow.
@@ -50,15 +98,20 @@ The seed never contains a hardcoded password.
   Server Action repeat authorization checks because Proxy is not the security
   boundary.
 
-## Phase 3 branch locator
+## Branch locator and scheme verification
 
 - `src/lib/branches.ts` runs parameterized PostGIS `ST_DWithin` radius queries.
 - Results are ranked by normalized distance, available quota, and NPA health.
 - Only active, verified partners with a geographic point can be selected.
 - Branch selection uses an authenticated Server Action and checks application
   ownership; viewing the map never mutates data.
+- GeoNames places and OpenStreetMap banks support broader location discovery.
+  Public bank listings do not become verified application partners.
+- Branch scheme confirmations require evidence and expire after 90 days.
+  See [the location directory guide](./LOCATION_DIRECTORY.md) for import steps,
+  attribution, search behavior, and verification rules.
 
-## Phase 4 AI boundary
+## AI and voice integration
 
 Set `AI_SERVICE_MODE=mock` for deterministic offline development or `remote` to
 call the configured `AI_SERVICE_URL`. Every endpoint is represented by a typed,
@@ -83,7 +136,12 @@ All interactive text features use authenticated Server Actions. The
 browser sends only the user's prompt, selected language, or application ID;
 owned application data and eligible candidates are rebuilt on the server.
 
-## Phase 5 documents, PDF, and officer review
+Voice features use authenticated `/api/voice/transcribe`, `/api/voice/intent`,
+and `/api/voice/auto-fill` Route Handlers. Configure `GROQ_API_KEY` for real
+speech transcription. Development fallback transcripts are fixed examples,
+not recognition of the uploaded audio.
+
+## Documents, PDF, and officer review
 
 - Applicant files are checked by size, MIME signature, and ownership before a
   server-side Cloudinary upload. The API secret is never sent to the browser.
