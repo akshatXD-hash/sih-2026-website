@@ -349,23 +349,18 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
             disabled={disabled}
             className="group relative inline-flex shrink-0 whitespace-nowrap items-center gap-2.5 rounded-xl bg-[#1E3A2B] px-5 py-3 text-sm font-extrabold text-[#F7F3E9] shadow-md shadow-[#1E3A2B]/20 transition-all duration-200 hover:bg-[#162E21] hover:shadow-lg hover:shadow-[#1E3A2B]/30 disabled:opacity-50 cursor-pointer"
           >
-            <span className="relative flex size-3 shrink-0 items-center justify-center">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#D99B26] opacity-75"></span>
-              <span className="relative inline-flex size-2 rounded-full bg-[#F7F3E9]"></span>
-            </span>
             <svg className="size-4 shrink-0 text-[#D99B26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
-            <span>Speak to Auto-Fill Form</span>
+            <span>Fill the form by voice</span>
           </button>
         </div>
       )}
 
       {state === "recording" && (
         <div className="mt-4 flex flex-col items-center justify-center gap-4 rounded-xl border border-red-200 bg-red-50/40 p-5 text-center">
-          <div className="flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
-            <span className="h-2.5 w-2.5 rounded-full bg-red-600 animate-ping" />
-            Listening... Speak now ({formatTime(recordingSeconds)})
+          <div role="status" className="flex items-center gap-2 rounded-md bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+            Recording — speak now ({formatTime(recordingSeconds)})
           </div>
           <div className="flex h-12 items-center justify-center gap-1.5">
             {audioLevels.map((lvl, index) => (
