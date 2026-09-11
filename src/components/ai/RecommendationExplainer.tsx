@@ -40,7 +40,7 @@ export function RecommendationExplainer({ applicationId }: { applicationId: stri
       {state.recommendation && (
         <div aria-live="polite" className="mt-5 grid gap-3 md:grid-cols-[1fr_280px]">
           <div className="rounded-xl border border-[#1E3A2B]/15 bg-white p-4">
-            <p className="text-sm font-bold text-[#1E3A2B]">Top deterministic match</p>
+            <p className="text-sm font-bold text-[#1E3A2B]">Closest scheme match</p>
             <p className="mt-1 text-lg font-black text-[#191917]">{state.recommendation.topScheme}</p>
             <p className="mt-2 text-sm leading-6 text-slate-700">{state.recommendation.explanation}</p>
           </div>

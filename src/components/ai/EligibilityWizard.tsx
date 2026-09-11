@@ -202,7 +202,7 @@ export function EligibilityWizard() {
           <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#B85228]">Step 1 Verification</span>
           <h2 className="mt-1 text-xl font-black text-[#191917]">Verify basic applicant details</h2>
           <p className="text-xs font-medium text-[#1E3A2B]/75 mt-0.5">
-            Review the values prefilled by AI or enter manually to proceed to deterministic scheme matching.
+            Check the details filled in for you, or enter them yourself, before finding matching schemes.
           </p>
         </div>
 
