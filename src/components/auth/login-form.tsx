@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { loginAction } from "@/app/actions/auth";
 
 export function LoginForm({ nextPath }: { nextPath?: string }) {
   const [state, formAction, pending] = useActionState(loginAction, undefined);
+  // Keep the email through React's form reset after a failed sign-in.
+  // The uncontrolled password field still resets and is never persisted.
+  const [email, setEmail] = useState("");
 
   return (
     <form action={formAction} className="space-y-5">
@@ -17,6 +20,8 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
           className="field"
           type="email"
           name="email"
+          value={email}
+          onChange={event => setEmail(event.target.value)}
           autoComplete="email"
           required
         />
