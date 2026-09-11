@@ -51,15 +51,35 @@ database/security boundary sits.
 
 ## Getting started
 
-Copy `.env.example` to `.env` and replace the placeholders with the pooled and
-direct connection strings from Neon. Generate `AUTH_SECRET` with
-`npx auth secret`; set `AUTH_TRUST_HOST=true` only when the deployment platform
-forwards a trusted host header. Then generate the client, create the development
-migration, and seed the database:
+Use Node.js 22.12+ in the 22.x series, or Node.js 24+, with npm. Prisma's
+runtime requirement is stricter than Next.js's minimum. You also need a
+PostgreSQL database with permission to enable PostGIS; this project is
+configured for Neon.
+
+```bash
+git clone https://github.com/akshatXD-hash/sih-2026-website.git
+cd sih-2026-website
+```
+
+Copy `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell,
+or `cp .env.example .env` in a POSIX shell). Replace the database placeholders
+with the pooled and direct connection strings from your development database.
+Install dependencies, then generate an authentication secret:
+
+```bash
+npm ci
+npx auth secret
+```
+
+Ensure the generated `AUTH_SECRET` is available to the app and replace the
+placeholder in `.env`. Set `AUTH_TRUST_HOST=true` only when the host headers
+are trusted. Keep local environment files out of Git.
+
+Apply the committed migrations and seed your development database:
 
 ```bash
 npm run db:generate
-npm run db:migrate -- --name init
+npm run db:deploy
 npm run db:seed
 npm run dev
 ```
@@ -70,6 +90,27 @@ Public registration creates only `APPLICANT` users. To exercise the protected
 officer dashboard locally, set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`
 (12+ characters) in `.env`, rerun `npm run db:seed`, and sign in at `/login`.
 The seed never contains a hardcoded password.
+
+### Environment configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Pooled Neon connection for the application |
+| `DIRECT_URL` | Direct database connection for migrations and seeding |
+| `AUTH_SECRET` | Generated secret for authentication |
+| `AUTH_TRUST_HOST` | Trust host headers only on a trusted deployment |
+| `AI_SERVICE_MODE` | `mock` for deterministic AI responses; `remote` for FastAPI |
+| `AI_SERVICE_URL`, `AIML_SERVICE_URL` | External AI service settings; see `.env.example` and the AI handoff guide |
+| `AI_SERVICE_TIMEOUT_MS` | AI request timeout in milliseconds |
+| `GROQ_API_KEY` | Real voice transcription; remove the placeholder if unused |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Required for document uploads and delivery |
+| `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Optional development officer account |
+| `SHADOW_DATABASE_URL` | Optional separate database for creating development migrations |
+
+Mock AI mode still requires a database for authenticated application flows.
+Document uploads require valid Cloudinary credentials. The seed does not import
+the nationwide place and bank directory; follow
+[LOCATION_DIRECTORY.md](./LOCATION_DIRECTORY.md) to enable that dataset.
 
 ## Routes and authorization
 
@@ -182,8 +223,8 @@ server-only environment variables and rotate it immediately if it is exposed.
 ### PostGIS
 
 Prisma represents `channel_partners.location` as
-`Unsupported("geography(Point, 4326)")`. The initial migration must enable the
-`postgis` extension before the table is created and must add a GiST index. Query
+`Unsupported("geography(Point, 4326)")`. The committed initial migration enables the
+`postgis` extension before the table is created and adds a GiST index. Query
 or update that field with parameterized raw SQL/TypedSQL; Prisma CRUD remains
 available for the model because the field is nullable.
 
@@ -192,13 +233,44 @@ eligibility vary and must be verified against the source before production use.
 
 ## Useful commands
 
-```bash
-npm run db:generate
-npm run db:migrate -- --name <migration-name>
-npm run db:seed
-npm run db:studio
-npm test
-npm run pdf:sample
-npm run lint
-npm run build
-```
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Build the production application |
+| `npm start` | Serve an existing production build |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run the Vitest suite |
+| `npm run test:watch` | Run tests during development |
+| `npm run pdf:sample` | Generate and check a sample pre-sanction PDF |
+| `npm run db:generate` | Regenerate Prisma Client; also runs after install |
+| `npm run db:deploy` | Apply committed database migrations |
+| `npm run db:migrate -- --name <migration-name>` | Create a migration for a schema change in development |
+| `npm run db:seed` | Populate development data and the optional officer account |
+| `npm run db:studio` | Browse the configured database with Prisma Studio |
+| `npm run db:locations` | Import previously downloaded location datasets |
+
+For application changes, run `npm test`, `npm run lint`, and `npm run build`.
+Database integration checks are opt-in; their setup is documented in the
+location directory and action-plan guides below.
+
+For deployment, configure the server environment, install dependencies, run
+`npm run db:deploy` and `npm run db:generate`, then `npm run build` and
+`npm start`. Use development seeding deliberately; it is not a deployment step.
+
+## Repository guide
+
+| Path | Contents |
+| --- | --- |
+| `src/app/` | Applicant, authentication, and officer routes; actions and API handlers |
+| `src/components/` | Interface components, maps, forms, and AI interactions |
+| `src/lib/` | Matching, authorization, database access, integrations, and domain logic |
+| `src/__tests__/` | Automated tests |
+| `prisma/` | Schema, committed migrations, scheme catalogue, and seed data |
+| `scripts/` | Location import tools and PDF sample generation |
+| `public/` | Static website assets |
+
+- [AI service handoff](./AI_SERVICE_README.md): API contracts and integration boundaries.
+- [Location directory](./LOCATION_DIRECTORY.md): datasets, imports, and branch verification.
+- [Explainable matching and action plans](./docs/explainable-matching-and-action-plan.md): rule explanations, preparation steps, and demo checks.
+- [Implementation phases](./IMPLEMENTATION_PHASES.md): project sequence and review checkpoints.
+- [Agent instructions](./AGENTS.md): repository-specific guidance for coding agents.
