@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import Link from "next/link";
 
 import { BrandMark } from "@/components/brand-mark";
@@ -23,7 +25,7 @@ export default function HomePage() {
             <a className="text-white/60 hover:text-white" href="#trust">Why it works</a>
           </div>
           <div className="flex items-center gap-2">
-            <Link className="whitespace-nowrap rounded-md px-2 py-2 text-sm font-bold text-white hover:bg-white/10 sm:px-4" href="/login">Sign in</Link>
+            <Link className="whitespace-nowrap rounded-md px-2 py-2 text-sm font-bold text-white hover:bg-white/10 sm:px-4" href="/login"><T>Sign in</T></Link>
             <Link className="whitespace-nowrap rounded-md bg-white px-4 py-2.5 text-sm font-black text-black hover:bg-[#e6c99a] sm:px-5" href="/register"><span>Get started</span></Link>
           </div>
         </header>

@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import { useActionState } from "react";
 
@@ -31,22 +33,20 @@ export function DocumentUploadForm({ applicationId }: { applicationId: string })
   return (
     <form id="document-upload-form" action={formAction} className="panel scroll-mt-6 space-y-4">
       <div>
-        <h2 className="text-xl font-bold text-slate-950">Upload your documents here</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Choose the document type, select a file, then press Upload document. PDF or image, up to 5 MB per file.
-        </p>
+        <h2 className="text-xl font-bold text-slate-950"><T>Upload your documents here</T></h2>
+        <p className="mt-1 text-sm text-slate-600"> <T>Choose the document type, select a file, then press Upload document. PDF or image, up to 5 MB per file.</T> </p>
       </div>
       <label className="block space-y-1.5">
-        <span className="text-sm font-bold text-slate-700">1. Which document are you uploading?</span>
+        <span className="text-sm font-bold text-slate-700"><T>1. Which document are you uploading?</T></span>
         <select className="field" name="type" required defaultValue="">
-          <option value="" disabled>Select document type</option>
+          <option value="" disabled><T>Select document type</T></option>
           {documentTypes.map(([value, label]) => (
-            <option value={value} key={value}>{label}</option>
+            <option value={value} key={value}><T>{label}</T></option>
           ))}
         </select>
       </label>
       <label className="block space-y-1.5">
-        <span className="text-sm font-bold text-slate-700">2. Choose the file from your device</span>
+        <span className="text-sm font-bold text-slate-700"><T>2. Choose the file from your device</T></span>
         <input
           className="field py-3"
           type="file"
@@ -65,7 +65,7 @@ export function DocumentUploadForm({ applicationId }: { applicationId: string })
           {state.message}
         </p>
       )}
-      <SubmitButton pendingLabel="Uploading...">Upload document</SubmitButton>
+      <SubmitButton pendingLabel="Uploading..."><T>Upload document</T></SubmitButton>
     </form>
   );
 }

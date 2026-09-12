@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import { useMemo, useState } from "react";
 import type { ScoredBranch } from "@/lib/branch-ranking";
@@ -193,9 +195,7 @@ export function DirectoryBranches({
               href={`https://www.google.com/maps/dir/?api=1&destination=${branch.latitude},${branch.longitude}`}
               target="_blank"
               rel="noopener noreferrer"
-            >
-              Get directions
-            </a>
+            > <T>Get directions</T> </a>
             {branch.phone && /^[+\d\s()-]{5,30}$/.test(branch.phone) && (
               <a
                 className="font-semibold text-blue-700 underline"
@@ -222,7 +222,7 @@ export function DirectoryBranches({
                 </p>
               ) : (
                 <form action={savePreferredBankAction.bind(null, applicationId, branch.id)}>
-                  <SubmitButton pendingLabel="Saving branch…">Choose as preferred branch</SubmitButton>
+                  <SubmitButton pendingLabel="Saving branch…"><T>Choose as preferred branch</T></SubmitButton>
                 </form>
               )}
               <p className="mt-2 text-xs text-slate-600">

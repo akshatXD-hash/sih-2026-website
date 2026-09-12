@@ -1,3 +1,4 @@
+import { T } from "@/components/language/LanguageProvider";
 import Link from "next/link";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -15,6 +16,7 @@ const applicantNav = [
   ["03", "Branches", "/branches"],
   ["04", "Scheme help", "/assistant"],
   ["05", "Application", "/applications/new"],
+  ["06", "Language", "/language"],
 ] as const;
 
 export function AppShell({ children, user, mode }: AppShellProps) {
@@ -22,6 +24,7 @@ export function AppShell({ children, user, mode }: AppShellProps) {
     mode === "admin"
       ? ([
           ["01", "Lead dashboard", "/admin"],
+          ["03", "Language", "/language"],
           ...(user.role === "ADMIN" || user.role === "REVIEWER"
             ? [["02", "Branch scheme support", "/admin/branch-support"]]
             : []),
@@ -53,7 +56,7 @@ export function AppShell({ children, user, mode }: AppShellProps) {
         <BrandMark href={home} />
         <div className="mt-14">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E3A2B]/50">
-            {mode === "admin" ? "Officer workspace" : "Your application"}
+            <T>{mode === "admin" ? "Officer workspace" : "Your application"}</T>
           </p>
           <nav className="mt-5 border-t border-[#1E3A2B]/15">
             {navigation.map(([, label, href]) => (
@@ -62,7 +65,7 @@ export function AppShell({ children, user, mode }: AppShellProps) {
                 href={href}
                 key={href}
               >
-                <span>{label}</span>
+                <span><T>{label}</T></span>
               </Link>
             ))}
           </nav>
@@ -76,7 +79,7 @@ export function AppShell({ children, user, mode }: AppShellProps) {
             <div className="min-w-0">
               <p className="truncate text-sm font-black text-[#1E3A2B]">{user.name}</p>
               <p className="text-[10px] uppercase tracking-[.14em] text-[#B85228]">
-                {user.role.replaceAll("_", " ")}
+                <T>{user.role.replaceAll("_", " ")}</T>
               </p>
             </div>
           </div>
@@ -98,7 +101,7 @@ export function AppShell({ children, user, mode }: AppShellProps) {
                 href={href}
                 key={href}
               >
-                {label}
+                <T>{label}</T>
               </Link>
             ))}
           </nav>

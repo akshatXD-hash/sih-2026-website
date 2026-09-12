@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
 
 import { useActionState, useState } from "react";
 
@@ -77,11 +78,11 @@ export function EligibilityWizard() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#1E3A2B]">
-                AI Assisted Intake
+                <T>AI Assisted Intake</T>
               </span>
             </div>
             <h2 className="mt-1 text-lg font-black text-[#191917]">
-              Choose how you want to describe your loan requirement
+              <T>Choose how you want to describe your loan requirement</T>
             </h2>
           </div>
 
@@ -97,7 +98,7 @@ export function EligibilityWizard() {
               <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
-              <span>Voice Auto-Fill</span>
+              <span><T>Voice Auto-Fill</T></span>
             </button>
             <button
               type="button"
@@ -110,7 +111,7 @@ export function EligibilityWizard() {
               <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              <span>Type Text</span>
+              <span><T>Type Text</T></span>
             </button>
           </div>
         </div>
@@ -122,7 +123,7 @@ export function EligibilityWizard() {
             <form action={intentAction} className="space-y-4">
               <input type="hidden" name="language" value="auto" />
               <div>
-                <p className="text-xs font-bold text-[#1E3A2B]">Describe in any language</p>
+                <p className="text-xs font-bold text-[#1E3A2B]"><T>Describe in any language</T></p>
                 <p className="text-xs text-[#191917]/70 mt-0.5">
                   English, हिंदी, ಕನ್ನಡ, मराठी, Hinglish, or your native language. AI will extract form values automatically.
                 </p>
@@ -138,8 +139,8 @@ export function EligibilityWizard() {
                 placeholder="Example: I run a tailoring service and need ₹1,20,000. My annual household income is ₹2,40,000. (या हिंदी में: मेरी सिलाई की दुकान है और मुझे ₹1,20,000 की जरूरत है...)"
               />
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <SubmitButton pendingLabel="Analysing with AI...">Prefill Form with AI</SubmitButton>
-                <span className="text-xs text-[#191917]/50">AI suggestions prefill values for your verification.</span>
+                <SubmitButton pendingLabel="Analysing with AI..."><T>Prefill Form with AI</T></SubmitButton>
+                <span className="text-xs text-[#191917]/50"><T>AI suggestions prefill values for your verification.</T></span>
               </div>
               {intentState.error && (
                 <p aria-live="polite" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-800">
@@ -185,16 +186,16 @@ export function EligibilityWizard() {
             <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
-            Undo Auto-Fill
+            <T>Undo Auto-Fill</T>
           </button>
         </div>
       )}
       <form action={profileAction} className="rounded-2xl border border-[#1E3A2B]/15 bg-white/95 p-6 sm:p-8 shadow-sm backdrop-blur-xs space-y-6" key={formVersion}>
         <div className="border-b border-[#1E3A2B]/10 pb-4">
-          <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#B85228]">Step 1 Verification</span>
-          <h2 className="mt-1 text-xl font-black text-[#191917]">Verify basic applicant details</h2>
+          <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#B85228]"><T>Step 1 Verification</T></span>
+          <h2 className="mt-1 text-xl font-black text-[#191917]"><T>Verify basic applicant details</T></h2>
           <p className="text-xs font-medium text-[#1E3A2B]/75 mt-0.5">
-            Check the details filled in for you, or enter them yourself, before finding matching schemes.
+            <T>Check the details filled in for you, or enter them yourself, before finding matching schemes.</T>
           </p>
         </div>
 
@@ -204,11 +205,11 @@ export function EligibilityWizard() {
           </p>
         )}
         <div className="space-y-4">
-          <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">1. Activity & Demographics</h3>
+          <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]"><T>1. Activity &amp; Demographics</T></h3>
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#191917]">Project Category *</span>
+                <span className="text-xs font-bold text-[#191917]"><T>Project Category *</T></span>
                 {isVoiceFilled && activeIntent?.projectCategory && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[#1E3A2B]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#1E3A2B]">
                     ✓ Auto-filled by Voice
@@ -222,21 +223,21 @@ export function EligibilityWizard() {
                 required
                 defaultValue={activeIntent?.projectCategory ?? ""}
               >
-                <option value="" disabled>Select project category...</option>
-                <option value="micro-enterprise">Micro enterprise</option>
-                <option value="agriculture-allied">Agriculture allied</option>
-                <option value="manufacturing">Manufacturing</option>
-                <option value="services">Services</option>
-                <option value="trading">Trading</option>
-                <option value="higher-education-india">Higher education in India</option>
-                <option value="higher-education-abroad">Higher education abroad</option>
-                <option value="vocational-education">Vocational education</option>
+                <option value="" disabled><T>Select project category...</T></option>
+                <option value="micro-enterprise"><T>Micro enterprise</T></option>
+                <option value="agriculture-allied"><T>Agriculture allied</T></option>
+                <option value="manufacturing"><T>Manufacturing</T></option>
+                <option value="services"><T>Services</T></option>
+                <option value="trading"><T>Trading</T></option>
+                <option value="higher-education-india"><T>Higher education in India</T></option>
+                <option value="higher-education-abroad"><T>Higher education abroad</T></option>
+                <option value="vocational-education"><T>Vocational education</T></option>
               </select>
             </label>
 
             <label className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#191917]">Trade or Occupation</span>
+                <span className="text-xs font-bold text-[#191917]"><T>Trade or Occupation</T></span>
                 {isVoiceFilled && activeIntent?.trade && (
                   <span className="text-[10px] font-bold text-[#1E3A2B]">✓ Auto-filled</span>
                 )}
@@ -251,7 +252,7 @@ export function EligibilityWizard() {
             </label>
 
             <label className="space-y-1.5">
-              <span className="text-xs font-bold text-[#191917]">Age *</span>
+              <span className="text-xs font-bold text-[#191917]"><T>Age *</T></span>
               <input
                 className="w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15"
                 type="number"
@@ -265,7 +266,7 @@ export function EligibilityWizard() {
 
             <label className="space-y-1.5 sm:col-span-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#191917]">Gender *</span>
+                <span className="text-xs font-bold text-[#191917]"><T>Gender *</T></span>
                 {isVoiceFilled && activeIntent?.suggestedGender && (
                   <span className="text-[10px] font-bold text-[#1E3A2B]">✓ Suggested by Voice</span>
                 )}
@@ -277,12 +278,12 @@ export function EligibilityWizard() {
                 required
                 defaultValue={activeIntent?.suggestedGender ?? "PREFER_NOT_TO_SAY"}
               >
-                <option value="FEMALE">Female</option>
-                <option value="MALE">Male</option>
-                <option value="TRANSGENDER">Transgender</option>
-                <option value="NON_BINARY">Non-binary</option>
-                <option value="OTHER">Other</option>
-                <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                <option value="FEMALE"><T>Female</T></option>
+                <option value="MALE"><T>Male</T></option>
+                <option value="TRANSGENDER"><T>Transgender</T></option>
+                <option value="NON_BINARY"><T>Non-binary</T></option>
+                <option value="OTHER"><T>Other</T></option>
+                <option value="PREFER_NOT_TO_SAY"><T>Prefer not to say</T></option>
               </select>
             </label>
           </div>
@@ -290,11 +291,11 @@ export function EligibilityWizard() {
 
         {/* SECTION 2: FINANCIAL PARAMETERS */}
         <div className="space-y-4 pt-2 border-t border-[#1E3A2B]/10">
-          <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">2. Financial Parameters</h3>
+          <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]"><T>2. Financial Parameters</T></h3>
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#191917]">Requested Loan Amount (₹)</span>
+                <span className="text-xs font-bold text-[#191917]"><T>Requested Loan Amount (₹)</T></span>
                 {isVoiceFilled && activeIntent?.requestedAmount && (
                   <span className="text-[10px] font-bold text-[#B85228]">⚡ Extracted</span>
                 )}
@@ -312,7 +313,7 @@ export function EligibilityWizard() {
 
             <label className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#191917]">Annual Household Income (₹)</span>
+                <span className="text-xs font-bold text-[#191917]"><T>Annual Household Income (₹)</T></span>
                 {isVoiceFilled && activeIntent?.annualIncome && (
                   <span className="text-[10px] font-bold text-[#B85228]">⚡ Extracted</span>
                 )}
@@ -340,14 +341,14 @@ export function EligibilityWizard() {
         </div>
         <div className="space-y-3 pt-2 border-t border-[#1E3A2B]/10">
           <div>
-            <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">3. Applicant Category Tags</h3>
-            <p className="text-xs text-[#191917]/70 mt-0.5">Select every group that applies to your household for target scheme subsidies.</p>
+            <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]"><T>3. Applicant Category Tags</T></h3>
+            <p className="text-xs text-[#191917]/70 mt-0.5"><T>Select every group that applies to your household for target scheme subsidies.</T></p>
           </div>
           <div className="grid gap-2.5 rounded-xl border border-[#1E3A2B]/15 bg-[#FAF6EE]/40 p-4 sm:grid-cols-2 lg:grid-cols-3 max-h-60 overflow-y-auto">
             {applicantGroups.map(([value, label]) => (
               <label className="flex items-center gap-2.5 rounded-lg p-1.5 hover:bg-[#1E3A2B]/5 cursor-pointer text-xs font-bold text-[#191917]" key={value}>
                 <input className="size-4 rounded border-[#1E3A2B]/30 text-[#1E3A2B] focus:ring-[#1E3A2B]" type="checkbox" name="applicantTags" value={value} />
-                <span>{label}</span>
+                <span><T>{label}</T></span>
               </label>
             ))}
           </div>
@@ -355,7 +356,7 @@ export function EligibilityWizard() {
 
         <div className="pt-4 border-t border-[#1E3A2B]/10 flex items-center justify-end">
           <button className="button-primary bg-[#1E3A2B] hover:bg-[#162E21] text-[#F7F3E9] border-none px-8 py-3.5 text-sm font-extrabold rounded-xl shadow-md shadow-[#1E3A2B]/20 cursor-pointer transition-all" type="submit">
-            Continue to Financial Details →
+            <T>Continue to Financial Details →</T>
           </button>
         </div>
       </form>

@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import { buildActionPlan } from "@/lib/action-plan";
 import { ApplicationSection } from "@/components/applications/ApplicationSection";
 import { SubmitButton } from "@/components/forms/SubmitButton";
@@ -42,7 +44,7 @@ export default async function NewApplicationPage({
         <span className="eyebrow">Application flow</span>
         <h1 className="mt-4 text-3xl font-bold">Start with eligibility</h1>
         <p className="mt-3 text-slate-600">A draft application is created by the eligibility wizard.</p>
-        <Link className="button-primary mt-6" href="/eligibility">Start eligibility check</Link>
+        <Link className="button-primary mt-6" href="/eligibility"><T>Start eligibility check</T></Link>
       </section>
     );
   }
@@ -81,38 +83,36 @@ export default async function NewApplicationPage({
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <div>
-        <span className="eyebrow">Application review</span>
+        <span className="eyebrow"><T>Application review</T></span>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950">My application</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950"><T>My application</T></h1>
             <p className="mt-2 text-sm text-slate-600">{application.status.replaceAll("_", " ")}</p>
           </div>
 
         </div>
         {saved === "branch" && <p role="status" className="mt-4 rounded-xl bg-teal-50 p-3 text-sm text-teal-900">✓ Branch choice saved. {application.preferredBankId ? "Scheme support still needs confirmation before online submission." : "Your checklist has been updated."}</p>}
         {submitted === "1" && (
-          <p className="mt-5 rounded-xl bg-emerald-50 p-4 font-semibold text-emerald-800">
-            Application submitted successfully.
-          </p>
+          <p className="mt-5 rounded-xl bg-emerald-50 p-4 font-semibold text-emerald-800"> <T>Application submitted successfully.</T> </p>
         )}
       </div>
 
       <dl className="panel grid gap-5 sm:grid-cols-2">
-        <div><dt className="text-sm text-slate-500">Scheme</dt><dd className="mt-1 font-bold">{application.loanScheme?.name ?? "Not selected"}</dd></div>
-        <div><dt className="text-sm text-slate-500">Requested amount</dt><dd className="mt-1 font-bold">{principal == null ? "Not entered" : INR.format(principal)}</dd></div>
-        <div><dt className="text-sm text-slate-500">Branch</dt><dd className="mt-1 font-bold">{application.channelPartner?.name ?? application.preferredBank?.name ?? <span className="font-medium text-amber-700">Not selected</span>}</dd></div>
+        <div><dt className="text-sm text-slate-500"><T>Scheme</T></dt><dd className="mt-1 font-bold">{application.loanScheme?.name ?? "Not selected"}</dd></div>
+        <div><dt className="text-sm text-slate-500"><T>Requested amount</T></dt><dd className="mt-1 font-bold">{principal == null ? "Not entered" : INR.format(principal)}</dd></div>
+        <div><dt className="text-sm text-slate-500"><T>Branch</T></dt><dd className="mt-1 font-bold">{application.channelPartner?.name ?? application.preferredBank?.name ?? <span className="font-medium text-amber-700"><T>Not selected</T></span>}</dd></div>
       </dl>
 
 
       {application.status === ApplicationStatus.DRAFT && (
         <div className="rounded-xl bg-teal-50 p-4">
           <p className="mb-3 text-sm text-teal-900">{!application.loanSchemeId ? "Next: choose a scheme that fits your needs." : !application.channelPartnerId ? application.preferredBankId ? "Preferred branch saved. Contact the branch to confirm support, or choose a confirmed application partner to submit online." : "Next: select a branch for this scheme." : "Review your documents, then submit when you are ready."}</p>
-          {!application.loanSchemeId ? <Link className="button-primary" href={"/schemes?applicationId=" + encodeURIComponent(application.id)}>Choose scheme</Link> : !application.channelPartnerId ? <Link className="button-primary" href={"/branches?applicationId=" + encodeURIComponent(application.id)}>{application.preferredBankId ? "Review branch choice" : "Choose branch"}</Link> : <form action={submit}><SubmitButton pendingLabel="Submitting…">Submit application</SubmitButton></form>}
+          {!application.loanSchemeId ? <Link className="button-primary" href={"/schemes?applicationId=" + encodeURIComponent(application.id)}><T>Choose scheme</T></Link> : !application.channelPartnerId ? <Link className="button-primary" href={"/branches?applicationId=" + encodeURIComponent(application.id)}>{application.preferredBankId ? "Review branch choice" : "Choose branch"}</Link> : <form action={submit}><SubmitButton pendingLabel="Submitting…"><T>Submit application</T></SubmitButton></form>}
         </div>
       )}
 
       {reviewedDocuments.length > 0 && <section className="panel" aria-label="Document review updates">
-        <h2 className="text-lg font-bold">Document review updates</h2>
+        <h2 className="text-lg font-bold"><T>Document review updates</T></h2>
         <p className="mt-2 text-sm text-slate-600">{reviewedDocuments.length - rejectedCount} verified · {rejectedCount} rejected</p>
         <ul className="mt-3 space-y-3">{reviewedDocuments.slice(0, 3).map(document => <li key={document.id} className="rounded-lg bg-slate-50 p-3 text-sm">
           <p className="font-semibold">{document.status === "REJECTED" ? "Needs correction" : "✓ Verified"}: {document.originalFileName}</p>
@@ -156,12 +156,12 @@ export default async function NewApplicationPage({
         <p className="text-sm text-slate-500">Reference {application.referenceNumber}</p>
         <p className="mt-2 text-sm">Annual income: {application.annualIncome == null ? "Not entered" : INR.format(Number(application.annualIncome))} · Project: {application.projectCategory ?? "Not entered"}</p>
         {application.status === ApplicationStatus.DRAFT && <div className="my-4 flex flex-wrap gap-4 text-sm font-semibold text-teal-700">
-          <Link href={"/applications/" + encodeURIComponent(application.id) + "/profile"}>Edit answers</Link>
-          <Link href={"/schemes?applicationId=" + encodeURIComponent(application.id)}>Change scheme</Link>
-          {application.loanSchemeId && <Link href={"/branches?applicationId=" + encodeURIComponent(application.id)}>Change branch</Link>}
+          <Link href={"/applications/" + encodeURIComponent(application.id) + "/profile"}><T>Edit answers</T></Link>
+          <Link href={"/schemes?applicationId=" + encodeURIComponent(application.id)}><T>Change scheme</T></Link>
+          {application.loanSchemeId && <Link href={"/branches?applicationId=" + encodeURIComponent(application.id)}><T>Change branch</T></Link>}
         </div>}
         {application.loanScheme && application.channelPartner && <a className="my-4 inline-block text-sm font-semibold text-teal-700 underline" href={"/applications/" + encodeURIComponent(application.id) + "/pre-sanction"}>Download pre-sanction summary</a>}
-        <h2 className="mt-4 font-bold">Status history</h2>
+        <h2 className="mt-4 font-bold"><T>Status history</T></h2>
         {application.statusHistory.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">No recorded status changes yet.</p>
         ) : (

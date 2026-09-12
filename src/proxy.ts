@@ -24,10 +24,15 @@ export const proxy = auth((request) => {
     return NextResponse.redirect(new URL("/unauthorized", request.nextUrl));
   }
 
+  if (pathname.startsWith("/asha-worker") && role !== "ASHA_WORKER") {
+    return NextResponse.redirect(new URL("/unauthorized", request.nextUrl));
+  }
+
   if (
     applicantRoutes.some((route) => pathname.startsWith(route)) &&
     !hasApplicantAccess(role)
   ) {
+    if (role === "ASHA_WORKER") return NextResponse.redirect(new URL("/asha-worker", request.nextUrl));
     if (hasAdminAccess(role)) return NextResponse.redirect(new URL("/admin", request.nextUrl));
     return NextResponse.redirect(new URL("/unauthorized", request.nextUrl));
   }
@@ -37,6 +42,7 @@ export const proxy = auth((request) => {
 
 export const config = {
   matcher: [
+    "/asha-worker/:path*",
     "/admin/:path*",
     "/eligibility/:path*",
     "/schemes/:path*",

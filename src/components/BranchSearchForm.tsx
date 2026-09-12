@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import { useRef, useState, useTransition } from "react";
 
@@ -105,10 +107,10 @@ export function BranchSearchForm({
         <input type="hidden" name="applicationId" value={applicationId} />
       )}
       <input ref={placeRef} type="hidden" name="placeId" defaultValue={defaultPlaceId ?? ""} />
-      {applicationId ? <input type="hidden" name="schemeId" value={selectedSchemeId ?? ""} /> : <label className="block text-sm font-semibold">Check support for a scheme<select name="schemeId" className="field mt-1" defaultValue={selectedSchemeId ?? ""} disabled={isPending} onChange={() => {
+      {applicationId ? <input type="hidden" name="schemeId" value={selectedSchemeId ?? ""} /> : <label className="block text-sm font-semibold"> <T>Check support for a scheme</T> <select name="schemeId" className="field mt-1" defaultValue={selectedSchemeId ?? ""} disabled={isPending} onChange={() => {
         if (!locating && (placeRef.current?.value || districtRef.current?.value || (latRef.current?.value && lngRef.current?.value))) formRef.current?.requestSubmit();
-      }}><option value="">All banks (no scheme selected)</option>{schemes.map(scheme => <option key={scheme.id} value={scheme.id}>{scheme.name}</option>)}</select></label>}
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="confirmedOnly" value="1" defaultChecked={defaultConfirmedOnly} />Only show branches with current scheme confirmation</label>
+      }}><option value=""> <T>All banks (no scheme selected)</T> </option>{schemes.map(scheme => <option key={scheme.id} value={scheme.id}>{scheme.name}</option>)}</select></label>}
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="confirmedOnly" value="1" defaultChecked={defaultConfirmedOnly} /> <T>Only show branches with current scheme confirmation</T> </label>
 
       {/* Geolocation button */}
       <button
@@ -119,11 +121,9 @@ export function BranchSearchForm({
       >
         {locating ? (
           <>
-            <span className="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            Locating…
-          </>
+            <span className="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> <T>Locating…</T> </>
         ) : (
-          <>📍 Use my current location</>
+          <> <T>📍 Use my current location</T> </>
         )}
       </button>
 
@@ -135,14 +135,14 @@ export function BranchSearchForm({
 
       <div className="relative flex items-center gap-3">
         <hr className="flex-1 border-slate-200" />
-        <span className="text-xs font-semibold text-slate-400">OR</span>
+        <span className="text-xs font-semibold text-slate-400"> <T>OR</T> </span>
         <hr className="flex-1 border-slate-200" />
       </div>
 
       {/* Manual lat/lng */}
       <div className="grid grid-cols-2 gap-3">
         <label className="block space-y-1.5">
-          <span className="text-xs font-bold text-slate-600">Latitude</span>
+          <span className="text-xs font-bold text-slate-600"> <T>Latitude</T> </span>
           <input
             ref={latRef}
             onChange={() => { if (districtRef.current) districtRef.current.value = ""; if (placeRef.current) placeRef.current.value = ""; }}
@@ -158,7 +158,7 @@ export function BranchSearchForm({
           />
         </label>
         <label className="block space-y-1.5">
-          <span className="text-xs font-bold text-slate-600">Longitude</span>
+          <span className="text-xs font-bold text-slate-600"> <T>Longitude</T> </span>
           <input
             ref={lngRef}
             onChange={() => { if (districtRef.current) districtRef.current.value = ""; if (placeRef.current) placeRef.current.value = ""; }}
@@ -177,9 +177,7 @@ export function BranchSearchForm({
 
       {/* District fallback */}
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold text-slate-600">
-          Village, town, city or PIN code
-        </span>
+        <span className="text-xs font-bold text-slate-600"> <T>Village, town, city or PIN code</T> </span>
         <input
           className="field text-sm"
           name="district"
@@ -197,12 +195,11 @@ export function BranchSearchForm({
         />
       </label>
 
-      <p className="text-xs text-slate-500">For villages with the same name, add a comma and your state. PIN codes show matching postal localities to choose from.</p>
+      <p className="text-xs text-slate-500"> <T>For villages with the same name, add a comma and your state. PIN codes show matching postal localities to choose from.</T> </p>
 
       {/* Radius */}
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold text-slate-600">
-          Search radius <span className="font-normal text-slate-400">(km)</span>
+        <span className="text-xs font-bold text-slate-600"> <T>Search radius</T> <span className="font-normal text-slate-400">(km)</span>
         </span>
         <input
           className="field text-sm"

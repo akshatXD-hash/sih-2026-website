@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import { DocumentStatus, DocumentType } from "@/generated/prisma/enums";
 import {
   confirmDocumentExtractionAction,
@@ -38,7 +40,7 @@ export function ApplicationDocuments({
     <section className="panel">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-950">Uploaded documents</h2>
+          <h2 className="text-xl font-bold text-slate-950"><T>Uploaded documents</T></h2>
           <p className="mt-1 text-sm text-slate-600">Track officer decisions and correction reasons for each file.</p>
         </div>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
@@ -47,9 +49,7 @@ export function ApplicationDocuments({
       </div>
 
       {documents.length === 0 ? (
-        <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-          No documents uploaded yet.
-        </p>
+        <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-500"> <T>No documents uploaded yet.</T> </p>
       ) : (
         <div className="mt-5 space-y-4">
           {documents.map((document) => {
@@ -80,7 +80,7 @@ export function ApplicationDocuments({
                     <div><dt className="text-teal-700">Name</dt><dd className="font-bold text-teal-950">{extracted.data.extracted_fields.name || "Not detected"}</dd></div>
                     <div><dt className="text-teal-700">Confidence</dt><dd className="font-bold text-teal-950">{Math.round(extracted.data.raw_confidence * 100)}%</dd></div>
                     {extracted.data.extracted_fields.category && <div><dt className="text-teal-700">Category</dt><dd className="font-bold text-teal-950">{extracted.data.extracted_fields.category}</dd></div>}
-                    {extracted.data.extracted_fields.annual_income != null && <div><dt className="text-teal-700">Annual income</dt><dd className="font-bold text-teal-950">INR {extracted.data.extracted_fields.annual_income.toLocaleString("en-IN")}</dd></div>}
+                    {extracted.data.extracted_fields.annual_income != null && <div><dt className="text-teal-700"><T>Annual income</T></dt><dd className="font-bold text-teal-950">INR {extracted.data.extracted_fields.annual_income.toLocaleString("en-IN")}</dd></div>}
                   </dl>
                 )}
 
@@ -90,7 +90,7 @@ export function ApplicationDocuments({
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <form action={downloadAction}>
-                    <SubmitButton className="button-secondary" pendingLabel="Opening...">Download</SubmitButton>
+                    <SubmitButton className="button-secondary" pendingLabel="Opening..."><T>Download</T></SubmitButton>
                   </form>
                   {canManage && supportsOcr && document.status !== DocumentStatus.PROCESSING && !document.ocrConfirmedAt && document.status !== DocumentStatus.VERIFIED && document.status !== DocumentStatus.REJECTED && (
                     <form action={processAction}>

@@ -1,4 +1,5 @@
 "use client";
+import { T, useTranslate } from "@/components/language/LanguageProvider";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
@@ -15,6 +16,7 @@ interface SchemeFiltersProps {
 }
 
 export function SchemeFilters({ hasMatches = false }: SchemeFiltersProps) {
+  const t = useTranslate();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -71,7 +73,7 @@ export function SchemeFilters({ hasMatches = false }: SchemeFiltersProps) {
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                {cat.label}
+                <T>{cat.label}</T>
               </button>
             );
           })}
@@ -79,9 +81,7 @@ export function SchemeFilters({ hasMatches = false }: SchemeFiltersProps) {
 
         {/* Sort Select */}
         <div className="flex items-center gap-2">
-          <label htmlFor="scheme-sort" className="text-xs font-bold text-slate-600 whitespace-nowrap">
-            Sort by:
-          </label>
+          <label htmlFor="scheme-sort" className="text-xs font-bold text-slate-600 whitespace-nowrap"> <T>Sort by:</T> </label>
           <select
             id="scheme-sort"
             value={currentSort}
@@ -104,7 +104,7 @@ export function SchemeFilters({ hasMatches = false }: SchemeFiltersProps) {
           <input
             type="search"
             defaultValue={currentSearch}
-            placeholder="Search schemes by name, provider, keyword or eligible trade..."
+            placeholder={t("Search schemes by name, provider, keyword or eligible trade...")}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

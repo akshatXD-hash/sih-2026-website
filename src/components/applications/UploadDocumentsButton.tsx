@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 export function UploadDocumentsButton() {
   return <button type="button" className="button-primary" onClick={() => {
@@ -7,5 +9,5 @@ export function UploadDocumentsButton() {
     const form = document.getElementById("document-upload-form");
     (form ?? section)?.scrollIntoView({ behavior: "smooth", block: "start" });
     form?.querySelector<HTMLSelectElement>("select")?.focus({ preventScroll: true });
-  }}>Upload documents</button>;
+  }}><T>Upload documents</T></button>;
 }

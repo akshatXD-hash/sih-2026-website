@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
@@ -15,7 +17,7 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="next" value={nextPath ?? "/eligibility"} />
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">Email address</span>
+        <span className="text-sm font-semibold text-slate-700"><T>Email address</T></span>
         <input
           className="field"
           type="email"
@@ -30,7 +32,7 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
         )}
       </label>
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">Password</span>
+        <span className="text-sm font-semibold text-slate-700"><T>Password</T></span>
         <input
           className="field"
           type="password"
@@ -44,17 +46,14 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
       </label>
       {state?.message && (
         <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" aria-live="polite">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
       <button className="button-primary w-full cursor-pointer" disabled={pending} type="submit">
-        {pending ? "Signing in…" : "Sign in"}
+        <T>{pending ? "Signing in…" : "Sign in"}</T>
       </button>
-      <p className="text-center text-sm text-slate-600">
-        New applicant?{" "}
-        <Link className="font-semibold text-teal-700 hover:text-teal-800" href="/register">
-          Create an account
-        </Link>
+      <p className="text-center text-sm text-slate-600"> <T>New applicant?</T>{" "}
+        <Link className="font-semibold text-teal-700 hover:text-teal-800" href="/register"> <T>Create an account</T> </Link>
       </p>
     </form>
   );

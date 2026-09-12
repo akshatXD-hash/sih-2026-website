@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import Link from "next/link";
 import { useActionState } from "react";
@@ -11,21 +13,21 @@ export function RegisterForm() {
   return (
     <form action={formAction} className="space-y-5">
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">Full name</span>
+        <span className="text-sm font-semibold text-slate-700"><T>Full name</T></span>
         <input className="field" name="name" autoComplete="name" required />
         {state?.errors?.name && (
           <span className="field-error">{state.errors.name[0]}</span>
         )}
       </label>
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">Email address</span>
+        <span className="text-sm font-semibold text-slate-700"><T>Email address</T></span>
         <input className="field" type="email" name="email" autoComplete="email" required />
         {state?.errors?.email && (
           <span className="field-error">{state.errors.email[0]}</span>
         )}
       </label>
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">Password</span>
+        <span className="text-sm font-semibold text-slate-700"><T>Password</T></span>
         <input
           className="field"
           type="password"
@@ -49,9 +51,7 @@ export function RegisterForm() {
       </button>
       <p className="text-center text-sm text-slate-600">
         Already registered?{" "}
-        <Link className="font-semibold text-teal-700 hover:text-teal-800" href="/login">
-          Sign in
-        </Link>
+        <Link className="font-semibold text-teal-700 hover:text-teal-800" href="/login"> <T>Sign in</T> </Link>
       </p>
     </form>
   );

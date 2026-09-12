@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -221,9 +223,7 @@ export default async function BranchesPage({ searchParams }: PageProps) {
                     {applicationId && !selectAction && <p className="mt-3 text-xs text-amber-800">Current scheme confirmation is required before choosing this application partner.</p>}
                     {selectAction && (
                       <form action={selectAction} className="mt-4">
-                        <button className="button-primary w-full" type="submit">
-                          Choose this branch
-                        </button>
+                        <button className="button-primary w-full" type="submit"> <T>Choose this branch</T> </button>
                       </form>
                     )}
                   </article>
@@ -235,9 +235,7 @@ export default async function BranchesPage({ searchParams }: PageProps) {
               <Link
                 className="button-secondary w-full"
                 href={`/applications/new?applicationId=${encodeURIComponent(applicationId)}`}
-              >
-                Back to application review
-              </Link>
+              > <T>Back to application review</T> </Link>
             )}
           </div>
         </div>

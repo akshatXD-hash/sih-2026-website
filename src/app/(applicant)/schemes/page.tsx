@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import { Suspense } from "react";
 import Link from "next/link";
 import { EligibilityExplanation, eligibilityLabels } from "@/components/schemes/EligibilityExplanation";
@@ -100,13 +102,13 @@ export default async function SchemesPage({
 
   return (
     <div>
-      <span className="eyebrow">Scheme finder</span>
+      <span className="eyebrow"><T>Scheme finder</T></span>
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-slate-950">
             {matches.length > 0
               ? `${matches.length} eligible matches`
-              : "Available schemes"}
+              : <T>Available schemes</T>}
           </h1>
           <p className="mt-2 text-slate-600">
             Hard eligibility rules are applied before ranking. No AI model
@@ -127,7 +129,7 @@ export default async function SchemesPage({
       )}
 
       {application && <nav aria-label="Eligibility results" className="mt-6 flex flex-wrap gap-3">
-        {[["ALL", "All schemes"], ...Object.entries(eligibilityLabels)].map(([key, label]) => <Link key={key} href={statusHref(key)} aria-current={selectedStatus === key ? "page" : undefined} className={selectedStatus === key ? "button-primary" : "button-secondary"}>{label} ({key === "ALL" ? schemes.length : [...assessments.values()].filter(a => a?.status === key).length})</Link>)}
+        {[["ALL", "All schemes"], ...Object.entries(eligibilityLabels)].map(([key, label]) => <Link key={key} href={statusHref(key)} aria-current={selectedStatus === key ? "page" : undefined} className={selectedStatus === key ? "button-primary" : "button-secondary"}><T>{label}</T> ({key === "ALL" ? schemes.length : [...assessments.values()].filter(a => a?.status === key).length})</Link>)}
         <Link className="button-secondary" href={`/applications/new?applicationId=${encodeURIComponent(application.id)}#action-plan`}>My skill readiness & action plan</Link>
       </nav>}
 
@@ -176,13 +178,13 @@ export default async function SchemesPage({
                 </p>
                 <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 text-sm">
                   <div>
-                    <p className="text-slate-500">Maximum</p>
+                    <p className="text-slate-500"><T>Maximum</T></p>
                     <p className="font-bold text-slate-900">
                       {inr.format(Number(scheme.maxAmount.toString()))}
                     </p>
                   </div>
                   <div>
-                    <p className="text-slate-500">Indicative rate</p>
+                    <p className="text-slate-500"><T>Indicative rate</T></p>
                     <p className="font-bold text-slate-900">
                       {scheme.interestRateMin == null &&
                       scheme.interestRateMax == null
@@ -200,9 +202,7 @@ export default async function SchemesPage({
                     href={scheme.sourceUrl}
                     target="_blank"
                     rel="noreferrer"
-                  >
-                    Official scheme source ↗
-                  </a>
+                  > <T>Official scheme source ↗</T> </a>
                 )}
                 {application && assessments.get(scheme.id) && <EligibilityExplanation assessment={assessments.get(scheme.id)!} applicationId={application.id} />}
                 <TermSimplifier
@@ -210,9 +210,7 @@ export default async function SchemesPage({
                 />
                 {action && (
                   <form action={action} className="mt-5">
-                    <button className="button-primary w-full" type="submit">
-                      Choose this scheme
-                    </button>
+                    <button className="button-primary w-full" type="submit"> <T>Choose this scheme</T> </button>
                   </form>
                 )}
               </article>

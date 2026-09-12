@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
 
 import { useEffect, useRef, type ReactNode } from "react";
 
@@ -16,7 +17,7 @@ export function ApplicationSection({ id, title, hint, children }: { id: string; 
     return () => window.removeEventListener("hashchange", reveal);
   }, [id]);
   return <details ref={ref} id={id} className="panel scroll-mt-6">
-    <summary className="cursor-pointer font-semibold text-slate-900">{title}{hint && <span className="ml-3 text-sm font-normal text-slate-500">{hint}</span>}</summary>
+    <summary className="cursor-pointer font-semibold text-slate-900"><T>{title}</T>{hint && <span className="ml-3 text-sm font-normal text-slate-500"><T>{hint}</T></span>}</summary>
     <div className="mt-5">{children}</div>
   </details>;
 }

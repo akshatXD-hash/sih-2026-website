@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 import { useActionState } from "react";
 import { saveBranchSupport } from "@/app/(admin)/admin/branch-support/actions";
 
@@ -9,7 +11,7 @@ export function BranchSupportForm({ branchId, branchType, schemes }: {
   return <form action={action} className="panel space-y-4">
     <input type="hidden" name="branchId" value={branchId} />
     <input type="hidden" name="branchType" value={branchType} />
-    <label className="block text-sm font-semibold">Scheme<select className="field mt-1" name="schemeId" required>{schemes.map(scheme => <option key={scheme.id} value={scheme.id}>{scheme.name}</option>)}</select></label>
+    <label className="block text-sm font-semibold"><T>Scheme</T><select className="field mt-1" name="schemeId" required>{schemes.map(scheme => <option key={scheme.id} value={scheme.id}>{scheme.name}</option>)}</select></label>
     <label className="block text-sm font-semibold">Branch confirmation<select className="field mt-1" name="status" defaultValue="UNKNOWN"><option value="UNKNOWN">Unconfirmed / withdraw earlier confirmation</option><option value="SUPPORTED">Confirmed: this specific branch handles the scheme</option><option value="NOT_SUPPORTED">Confirmed: this specific branch does not handle the scheme</option></select></label>
     <label className="block text-sm font-semibold">Public evidence link<input className="field mt-1" type="url" name="evidenceUrl" placeholder="https://..." required maxLength={1000} /></label>
     <p className="text-xs text-slate-600">Use an official branch-specific listing or a publishable record of branch confirmation. A bank-wide scheme advertisement or map listing alone is insufficient. Do not include private applicant information.</p>

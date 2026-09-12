@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import { useActionState } from "react";
 import { updateEligibilityProfileAction } from "@/app/(applicant)/actions";
@@ -11,10 +13,10 @@ export function ProfileEditor({ application }: { application: { id: string; proj
   return <form action={action} className="mt-6 space-y-5">
     <p className="text-sm text-slate-600">Saving recalculates your matches and clears the current scheme and branch selection. Your documents and practice progress remain saved. Leave an unknown financial amount blank; enter 0 only for actual zero annual income.</p>
     <div className="grid gap-5 sm:grid-cols-2">
-      <label>Project category<input required minLength={2} maxLength={80} list="project-categories" name="projectCategory" defaultValue={application.projectCategory ?? ""} className={inputClass} /><datalist id="project-categories">{["micro-enterprise", "manufacturing", "services", "trading", "agriculture-allied", "higher-education-india", "higher-education-abroad", "vocational-education"].map(value => <option key={value} value={value} />)}</datalist></label>
+      <label><T>Project category</T><input required minLength={2} maxLength={80} list="project-categories" name="projectCategory" defaultValue={application.projectCategory ?? ""} className={inputClass} /><datalist id="project-categories">{["micro-enterprise", "manufacturing", "services", "trading", "agriculture-allied", "higher-education-india", "higher-education-abroad", "vocational-education"].map(value => <option key={value} value={value} />)}</datalist></label>
       <label>Trade<input name="trade" maxLength={80} defaultValue={application.trade ?? ""} className={inputClass} /></label>
-      <label>Age<input required type="number" min={18} max={100} name="age" defaultValue={application.age ?? ""} className={inputClass} /></label>
-      <label>Gender<select required name="gender" defaultValue={application.gender ?? ""} className={inputClass}><option value="" disabled>Select</option>{Object.values(Gender).map(value => <option value={value} key={value}>{value.replaceAll("_", " ")}</option>)}</select></label>
+      <label><T>Age</T><input required type="number" min={18} max={100} name="age" defaultValue={application.age ?? ""} className={inputClass} /></label>
+      <label><T>Gender</T><select required name="gender" defaultValue={application.gender ?? ""} className={inputClass}><option value="" disabled>Select</option>{Object.values(Gender).map(value => <option value={value} key={value}>{value.replaceAll("_", " ")}</option>)}</select></label>
       <label>Requested amount (₹)<input type="number" min="0.01" max={50000000} step="0.01" name="requestedAmount" defaultValue={application.requestedAmount} className={inputClass} /></label>
       <label>Annual income (₹)<input type="number" min={0} max={100000000} step="0.01" name="annualIncome" defaultValue={application.annualIncome} className={inputClass} /></label>
     </div>

@@ -32,7 +32,7 @@ export async function GET(
     status: application.status,
     generatedAt: new Date(),
     applicantName: application.user.name,
-    applicantEmail: application.user.email,
+    applicantEmail: application.user.email ?? "Not provided",
     projectCategory: application.projectCategory,
     trade: application.trade,
     requestedAmount: application.requestedAmount == null ? null : Number(application.requestedAmount),

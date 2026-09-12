@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
 
 import { useFormStatus } from "react-dom";
 
@@ -16,7 +17,7 @@ export function SubmitButton({
   const { pending } = useFormStatus();
   return (
     <button type="submit" className={className} disabled={disabled || pending}>
-      {pending ? pendingLabel : children}
+      {pending ? <T>{pendingLabel}</T> : typeof children === "string" ? <T>{children}</T> : children}
     </button>
   );
 }

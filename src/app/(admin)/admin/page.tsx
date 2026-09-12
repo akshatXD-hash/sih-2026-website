@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import Link from "next/link";
 
 import { ApplicationStatus } from "@/generated/prisma/enums";
@@ -47,7 +49,7 @@ export default async function AdminDashboardPage({
 
   return (
     <div>
-      <span className="eyebrow">Officer workspace</span>
+      <span className="eyebrow"><T>Officer workspace</T></span>
       <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-950">Lead triage</h1>
       <p className="mt-3 text-slate-600">Review documents, leave notes, and move applications through controlled status transitions.</p>
       <AiHealthCard />
@@ -64,7 +66,7 @@ export default async function AdminDashboardPage({
       <div className="panel mt-6 overflow-x-auto p-0">
         <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
-            <tr><th className="px-5 py-4">Reference</th><th className="px-5 py-4">Applicant</th><th className="px-5 py-4">Scheme / branch</th><th className="px-5 py-4">Documents</th><th className="px-5 py-4">Status</th><th className="px-5 py-4">Created</th></tr>
+            <tr><th className="px-5 py-4">Reference</th><th className="px-5 py-4">Applicant</th><th className="px-5 py-4">Scheme / branch</th><th className="px-5 py-4"><T>Documents</T></th><th className="px-5 py-4">Status</th><th className="px-5 py-4">Created</th></tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {leads.map((lead) => (

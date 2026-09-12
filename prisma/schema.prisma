@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum UserRole {
+  ASHA_WORKER
   APPLICANT
   CHANNEL_PARTNER
   REVIEWER
@@ -78,7 +79,7 @@ enum DocumentStatus {
 model User {
   branchSupportReviews BranchSchemeSupport[]
   id           String   @id @default(cuid())
-  email        String   @unique
+  email        String?  @unique
   phone        String?  @unique
   name         String
   passwordHash String?  @map("password_hash")
@@ -93,6 +94,8 @@ model User {
   verifiedDocuments DocumentUpload[]         @relation("DocumentVerifier")
   applicationNotes  ApplicationNote[]        @relation("ApplicationNoteAuthor")
   statusChanges     ApplicationStatusEvent[] @relation("ApplicationStatusChangedBy")
+  assistedCases AshaCase[] @relation("AshaWorkerCases")
+  assistanceRecord AshaCase? @relation("AshaApplicant")
 
   @@map("users")
 }
@@ -206,6 +209,7 @@ model Application {
   preferredBank BankDirectory? @relation(fields: [preferredBankId], references: [id], onDelete: SetNull)
   notes          ApplicationNote[]
   statusHistory  ApplicationStatusEvent[]
+  ashaCase AshaCase?
   planTasks ApplicationTask[]
   competencies ApplicantCompetency[]
 
@@ -360,4 +364,27 @@ model ApplicantCompetency {
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   @@unique([applicationId, skillKey])
   @@map("applicant_competencies")
+}
+
+model AshaCase {
+  id String @id @default(cuid())
+  workerId String @map("worker_id")
+  applicantId String @unique @map("applicant_id")
+  applicationId String @unique @map("application_id")
+  village String
+  phone String?
+  contactName String? @map("contact_name")
+  contactKind String @default("NONE") @map("contact_kind")
+  consentedAt DateTime @map("consented_at")
+  consentVersion String @default("assisted-application-v1") @map("consent_version")
+  followUpAt DateTime? @map("follow_up_at")
+  followUpNote String? @map("follow_up_note")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  worker User @relation("AshaWorkerCases", fields: [workerId], references: [id], onDelete: Restrict)
+  applicant User @relation("AshaApplicant", fields: [applicantId], references: [id], onDelete: Restrict)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@index([workerId, updatedAt])
+  @@index([workerId, followUpAt])
+  @@map("asha_cases")
 }

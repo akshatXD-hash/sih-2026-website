@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import { useActionState, useId, useState } from "react";
 import { reviewDocumentAction } from "@/app/(admin)/admin/actions";
@@ -13,8 +15,8 @@ export function DocumentReviewForm({ applicationId, documentId }: { applicationI
     {state.error && <p id={`${id}-error`} role="alert" className="text-sm font-semibold text-red-700">{state.error}</p>}
     {state.success && <p role="status" className="text-sm font-semibold text-teal-700">{state.success}</p>}
     <div className="flex flex-wrap gap-3">
-      <button className="button-primary" name="decision" value="verify" type="submit" disabled={pending || Boolean(state.success)}>Verify document</button>
-      <button className="button-secondary" name="decision" value="reject" type="submit" disabled={pending || Boolean(state.success)}>Reject document</button>
+      <button className="button-primary" name="decision" value="verify" type="submit" disabled={pending || Boolean(state.success)}><T>Verify document</T></button>
+      <button className="button-secondary" name="decision" value="reject" type="submit" disabled={pending || Boolean(state.success)}><T>Reject document</T></button>
       {pending && <span role="status" className="text-sm text-slate-500">Saving review…</span>}
     </div>
   </form>;

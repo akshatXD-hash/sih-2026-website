@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import { DocumentReviewForm } from "@/components/documents/DocumentReviewForm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -55,9 +57,9 @@ export default async function AdminApplicationPage({
             <div><dt className="text-sm text-slate-500">Email</dt><dd className="font-bold">{application.user.email}</dd></div>
             <div><dt className="text-sm text-slate-500">Phone</dt><dd className="font-bold">{application.user.phone ?? "Not provided"}</dd></div>
             <div><dt className="text-sm text-slate-500">Requested</dt><dd className="font-bold">{application.requestedAmount == null ? "Not provided" : INR.format(Number(application.requestedAmount))}</dd></div>
-            <div><dt className="text-sm text-slate-500">Annual income</dt><dd className="font-bold">{application.annualIncome == null ? "Not provided" : INR.format(Number(application.annualIncome))}</dd></div>
-            <div><dt className="text-sm text-slate-500">Scheme</dt><dd className="font-bold">{application.loanScheme?.name ?? "Not selected"}</dd></div>
-            <div><dt className="text-sm text-slate-500">Branch</dt><dd className="font-bold">{application.channelPartner?.name ?? "Not selected"}</dd></div>
+            <div><dt className="text-sm text-slate-500"><T>Annual income</T></dt><dd className="font-bold">{application.annualIncome == null ? "Not provided" : INR.format(Number(application.annualIncome))}</dd></div>
+            <div><dt className="text-sm text-slate-500"><T>Scheme</T></dt><dd className="font-bold">{application.loanScheme?.name ?? "Not selected"}</dd></div>
+            <div><dt className="text-sm text-slate-500"><T>Branch</T></dt><dd className="font-bold">{application.channelPartner?.name ?? "Not selected"}</dd></div>
             <div><dt className="text-sm text-slate-500">Category</dt><dd className="font-bold">{application.projectCategory ?? "Not provided"}</dd></div>
             <div><dt className="text-sm text-slate-500">Trade</dt><dd className="font-bold">{application.trade ?? "Not provided"}</dd></div>
           </dl>
@@ -73,21 +75,21 @@ export default async function AdminApplicationPage({
                 {transitions.map((status) => <option value={status} key={status}>{status.replaceAll("_", " ")}</option>)}
               </select>
               <textarea className="field min-h-24 py-3" name="note" maxLength={2000} placeholder="Reason or decision note" aria-label="Reason or decision note" />
-              <SubmitButton pendingLabel="Updating...">Update status</SubmitButton>
+              <SubmitButton pendingLabel="Updating..."><T>Update status</T></SubmitButton>
             </form>
           ) : <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-500">No further officer transition is available.</p>}
         </section>
       </div>
 
       <section className="panel">
-        <h2 className="text-xl font-bold text-slate-950">Document verification</h2>
+        <h2 className="text-xl font-bold text-slate-950"><T>Document verification</T></h2>
         {application.documents.length === 0 ? <p className="mt-4 text-sm text-slate-500">No documents uploaded.</p> : (
           <div className="mt-5 space-y-4">
             {application.documents.map((document) => {
               const download = downloadDocumentAction.bind(null, document.id);
               return (
                 <article key={document.id} className="rounded-xl border border-slate-200 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-bold">{document.originalFileName}</p><p className="text-xs text-slate-500">{document.type.replaceAll("_", " ")} · {document.status.replaceAll("_", " ")}</p></div><form action={download}><SubmitButton className="button-secondary" pendingLabel="Opening...">Download</SubmitButton></form></div>
+                  <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-bold">{document.originalFileName}</p><p className="text-xs text-slate-500">{document.type.replaceAll("_", " ")} · {document.status.replaceAll("_", " ")}</p></div><form action={download}><SubmitButton className="button-secondary" pendingLabel="Opening..."><T>Download</T></SubmitButton></form></div>
                   {document.failureReason && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{document.failureReason}</p>}
                   {document.status !== DocumentStatus.VERIFIED && document.status !== DocumentStatus.REJECTED && (
                     <DocumentReviewForm applicationId={application.id} documentId={document.id} />
@@ -102,12 +104,12 @@ export default async function AdminApplicationPage({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="panel">
-          <h2 className="text-xl font-bold text-slate-950">Officer notes</h2>
-          <form action={noteAction} className="mt-4 space-y-3"><textarea className="field min-h-28 py-3" name="body" minLength={2} maxLength={2000} required placeholder="Add a private review note" aria-label="Private review note" /><SubmitButton pendingLabel="Saving...">Add note</SubmitButton></form>
+          <h2 className="text-xl font-bold text-slate-950"><T>Officer notes</T></h2>
+          <form action={noteAction} className="mt-4 space-y-3"><textarea className="field min-h-28 py-3" name="body" minLength={2} maxLength={2000} required placeholder="Add a private review note" aria-label="Private review note" /><SubmitButton pendingLabel="Saving..."><T>Add note</T></SubmitButton></form>
           <div className="mt-5 space-y-3">{application.notes.map((note) => <article className="rounded-xl bg-slate-50 p-4" key={note.id}><p className="text-sm text-slate-800">{note.body}</p><p className="mt-2 text-xs text-slate-500">{note.author.name} · {note.createdAt.toLocaleString("en-IN")}</p></article>)}</div>
         </section>
         <section className="panel">
-          <h2 className="text-xl font-bold text-slate-950">Status history</h2>
+          <h2 className="text-xl font-bold text-slate-950"><T>Status history</T></h2>
           <ol className="mt-5 space-y-4 border-l-2 border-slate-200 pl-5">{application.statusHistory.map((event) => <li key={event.id}><p className="font-bold">{event.toStatus.replaceAll("_", " ")}</p><p className="text-xs text-slate-500">{event.changedBy?.name ?? "System"} · {event.createdAt.toLocaleString("en-IN")}</p>{event.note && <p className="mt-1 text-sm text-slate-700">{event.note}</p>}</li>)}</ol>
         </section>
       </div>

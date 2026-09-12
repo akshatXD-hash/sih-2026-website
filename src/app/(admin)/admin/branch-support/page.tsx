@@ -1,3 +1,5 @@
+
+import { T } from "@/components/language/LanguageProvider";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/guards";
@@ -35,7 +37,7 @@ export default async function BranchSupportPage({ searchParams }: {
   return <div className="space-y-6">
     <h1 className="text-3xl font-bold">Verify branch scheme support</h1>
     <p className="text-slate-600">Record evidence for a specific branch and scheme. General bank participation does not establish branch-level support.</p>
-    <form method="GET" className="panel flex gap-3"><input className="field" name="q" defaultValue={query} placeholder="Bank name starts with… or exact PIN code" aria-label="Find a branch" minLength={2} required /><button className="button-primary">Search</button></form>
+    <form method="GET" className="panel flex gap-3"><input className="field" name="q" defaultValue={query} placeholder="Bank name starts with… or exact PIN code" aria-label="Find a branch" minLength={2} required /><button className="button-primary"><T>Search</T></button></form>
     {query && !branches.length && <p>No matching branches. Try the bank name as shown on the map, or a PIN code.</p>}
     <div className="space-y-2">{branches.map(branch => <Link className="panel block" key={branch.kind + branch.id} href={"/admin/branch-support?" + new URLSearchParams({ q: query, branchId: branch.id, kind: branch.kind })}><strong>{branch.name}</strong><p className="text-sm">{branch.address} · {branch.kind === "BANK" ? "Mapped bank" : "Application partner"}</p><p className="text-xs text-slate-500">{branch.id}</p></Link>)}</div>
     {selected[0] && <><h2 className="text-xl font-bold">{selected[0].name}</h2><p>{selected[0].address}</p><BranchSupportForm key={kind + id} branchId={id} branchType={kind} schemes={schemes} />

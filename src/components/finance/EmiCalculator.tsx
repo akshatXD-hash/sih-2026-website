@@ -1,4 +1,6 @@
 "use client";
+import { T } from "@/components/language/LanguageProvider";
+
 
 import { useState } from "react";
 
@@ -51,35 +53,25 @@ export function EmiCalculator({
         </p>
       </div>
       <form action={calculate} className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="space-y-1.5 text-sm font-bold text-slate-700">
-          Annual rate
-          <input className="field" name="rate" type="number" min="6.5" max="8" step="0.05" defaultValue={initialRate} required />
+        <label className="space-y-1.5 text-sm font-bold text-slate-700"> <T>Annual rate</T> <input className="field" name="rate" type="number" min="6.5" max="8" step="0.05" defaultValue={initialRate} required />
         </label>
-        <label className="space-y-1.5 text-sm font-bold text-slate-700">
-          Tenure (months)
-          <input className="field" name="tenure" type="number" min="6" max="240" step="1" defaultValue={initialTenure} required />
+        <label className="space-y-1.5 text-sm font-bold text-slate-700"> <T>Tenure (months)</T> <input className="field" name="tenure" type="number" min="6" max="240" step="1" defaultValue={initialTenure} required />
         </label>
-        <label className="space-y-1.5 text-sm font-bold text-slate-700">
-          Grace period
-          <select className="field" name="moratorium" defaultValue="0">
-            <option value="0">None</option>
+        <label className="space-y-1.5 text-sm font-bold text-slate-700"> <T>Grace period</T> <select className="field" name="moratorium" defaultValue="0">
+            <option value="0"><T>None</T></option>
             <option value="3">3 months</option>
             <option value="6">6 months</option>
             <option value="9">9 months</option>
             <option value="12">12 months</option>
           </select>
         </label>
-        <label className="space-y-1.5 text-sm font-bold text-slate-700">
-          Female rebate
-          <select className="field" name="rebate" defaultValue="0.5" disabled={gender !== "FEMALE"}>
+        <label className="space-y-1.5 text-sm font-bold text-slate-700"> <T>Female rebate</T> <select className="field" name="rebate" defaultValue="0.5" disabled={gender !== "FEMALE"}>
             <option value="0.5">0.5%</option>
             <option value="0.75">0.75%</option>
             <option value="1">1.0%</option>
           </select>
         </label>
-        <button className="button-secondary sm:col-span-2 lg:col-span-4" type="submit">
-          Calculate repayment
-        </button>
+        <button className="button-secondary sm:col-span-2 lg:col-span-4" type="submit"> <T>Calculate repayment</T> </button>
       </form>
 
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
