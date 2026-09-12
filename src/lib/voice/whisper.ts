@@ -69,6 +69,15 @@ function mockTranscribeAudio(options: TranscribeAudioOptions): VoiceTranscriptio
     };
   }
 
+  if (lang === "kn" || lang.includes("kannada")) {
+    return {
+      transcript: "ನಾನು ಮಹಿಳಾ ಟೈಲರ್, ಹೊಸ ಹೊಲಿಗೆ ಯಂತ್ರ ಖರೀದಿಸಲು ನನಗೆ ₹50,000 ಸಾಲ ಬೇಕಾಗಿದೆ.",
+      language: "kn",
+      confidence: 0.97,
+      duration: 3.6,
+    };
+  }
+
   return {
     transcript: "I run a small carpentry workshop and need a loan of 1.5 lakhs to purchase equipment.",
     language: lang === "auto" ? "en" : lang,

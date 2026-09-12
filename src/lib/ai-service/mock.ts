@@ -10,32 +10,42 @@ import type { AiService, OcrCertificateRequest } from "@/lib/ai-service/types";
 
 function parseNumericAmount(text: string): number {
   const normalized = text.toLowerCase().replaceAll(",", "");
-  const lakhMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lac|लाख)/i);
+  const lakhMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lac|लाख|ಲಕ್ಷ)/i);
   if (lakhMatch) {
     return Math.round(Number(lakhMatch[1]) * 100_000);
   }
-  const thousandMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:thousand|हजार|हज़ार|k)/i);
+  const thousandMatch = normalized.match(/(\d+(?:\.\d+)?)\s*(?:thousand|हजार|हज़ार|ಸಾವಿರ|k)/i);
   if (thousandMatch) {
     return Math.round(Number(thousandMatch[1]) * 1_000);
   }
-  const standardMatch = normalized.match(/(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)/i);
+  const standardMatch = normalized.match(/(?:₹|rs\.?|inr|ರೂ)?\s*(\d+(?:\.\d+)?)/i);
   return standardMatch ? Number(standardMatch[1]) : 0;
 }
 function extractAmount(text: string): number {
   const lower = text.toLowerCase();
-  const loanRegex = /(?:loan(?:\s*of)?|need|require|चाहिए|कर्ज|लोन|ऋण|funding(?:\s*of)?)\s*(?:of|is|around)?\s*(?:₹|rs\.?|inr)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|thousand|हजार|हज़ार))?)/i;
-  const loanMatch = lower.match(loanRegex);
-  if (loanMatch) {
-    return parseNumericAmount(loanMatch[1]);
+
+  const postfixLoanRegex = /([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|ಲಕ್ಷ|thousand|हजार|हज़ार|ಸಾವಿರ))?)\s*(?:₹|rs\.?|inr|ರೂ|रुपये)?\s*(?:का|के लिए|ಗಾಗಿ)?\s*(?:loan|कर्ज|लोन|ऋण|ಸಾಲ|ಬೇಕು|funding)/i;
+  const postfixMatch = lower.match(postfixLoanRegex);
+  if (postfixMatch && postfixMatch[1]) {
+    const val = parseNumericAmount(postfixMatch[1]);
+    if (val > 0) return val;
   }
-  const sanitized = lower.replace(/(?:income|आय|salary|कमाई)[^.!?]*/gi, "");
+
+  const prefixLoanRegex = /(?:loan(?:\s*of)?|need|require|चाहिए|कर्ज|लोन|ऋण|ಸಾಲ|ಬೇಕು|ಅಗತ್ಯವಿದೆ|funding(?:\s*of)?)\s*(?:of|is|around)?\s*(?:₹|rs\.?|inr|ರೂ)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|ಲಕ್ಷ|thousand|हजार|हज़ार|ಸಾವಿರ))?)/i;
+  const prefixMatch = lower.match(prefixLoanRegex);
+  if (prefixMatch && prefixMatch[1]) {
+    const val = parseNumericAmount(prefixMatch[1]);
+    if (val > 0) return val;
+  }
+
+  const sanitized = lower.replace(/(?:income|आय|salary|कमाई|ಆದಾಯ|ಸಂಬಳ)[^.!?]*/gi, "");
   return parseNumericAmount(sanitized || text);
 }
 function extractIncome(text: string): number {
   const lower = text.toLowerCase();
-  const incomeRegex = /(?:income|आय|salary|कमाई)\s*(?:is|of|होती\s*है|है)?\s*(?:₹|rs\.?|inr)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|thousand|हजार|हज़ार))?)/i;
+  const incomeRegex = /(?:income|आय|salary|कमाई|ಆದಾಯ|ಸಂಬಳ)\s*(?:is|of|होती\s*है|है|ಆಗಿದೆ|ಇದೆ)?\s*(?:₹|rs\.?|inr|ರೂ)?\s*([0-9.,]+(?:\s*(?:lakhs?|lac|लाख|ಲಕ್ಷ|thousand|हजार|हज़ार|ಸಾವಿರ))?)/i;
   const match = lower.match(incomeRegex);
-  if (match) {
+  if (match && match[1]) {
     return parseNumericAmount(match[1]);
   }
   return 0;
@@ -43,28 +53,28 @@ function extractIncome(text: string): number {
 
 function detectTrade(text: string): string {
   const lower = text.toLowerCase();
-  if (lower.includes("tailor") || lower.includes("सिलाई") || lower.includes("दर्जी") || lower.includes("शिंपी")) {
+  if (lower.includes("tailor") || lower.includes("सिलाई") || lower.includes("दर्जी") || lower.includes("शिंपी") || lower.includes("ಟೈಲರ್") || lower.includes("ಹೊಲಿಗೆ")) {
     return "tailoring";
   }
-  if (lower.includes("carpent") || lower.includes("बढ़ई") || lower.includes("सुतार") || lower.includes("furniture")) {
+  if (lower.includes("carpent") || lower.includes("बढ़ई") || lower.includes("सुतार") || lower.includes("furniture") || lower.includes("ಬಡಗಿ") || lower.includes("ಮರದ")) {
     return "carpentry";
   }
-  if (lower.includes("weav") || lower.includes("बुनकर") || lower.includes("handloom") || lower.includes("हथकरघा")) {
+  if (lower.includes("weav") || lower.includes("बुनकर") || lower.includes("handloom") || lower.includes("हथकरघा") || lower.includes("ನೇಯ್ಗೆ") || lower.includes("ಮಗ್ಗ")) {
     return "handloom weaving";
   }
-  if (lower.includes("potter") || lower.includes("कुम्हार") || lower.includes("मातीकाम")) {
+  if (lower.includes("potter") || lower.includes("कुम्हार") || lower.includes("मातीकाम") || lower.includes("ಕುಂಬಾರ") || lower.includes("ಮಡಕೆ")) {
     return "pottery";
   }
-  if (lower.includes("welder") || lower.includes("welding") || lower.includes("वेल्डिंग")) {
+  if (lower.includes("welder") || lower.includes("welding") || lower.includes("वेल्डिंग") || lower.includes("ವೆಲ್ಡಿಂಗ್")) {
     return "welding & fabrication";
   }
-  if (lower.includes("mechanic") || lower.includes("repair") || lower.includes("मरम्मत") || lower.includes("गैरेज")) {
+  if (lower.includes("mechanic") || lower.includes("repair") || lower.includes("मरम्मत") || lower.includes("गैरेज") || lower.includes("ರಿಪೇರಿ") || lower.includes("ಮೆಕ್ಯಾನಿಕ್")) {
     return "vehicle repair";
   }
-  if (lower.includes("dairy") || lower.includes("डेयरी") || lower.includes("दूध") || lower.includes("पशुपालन")) {
+  if (lower.includes("dairy") || lower.includes("डेयरी") || lower.includes("दूध") || lower.includes("पशुपालन") || lower.includes("ಡೈರಿ") || lower.includes("ಹಾಲು") || lower.includes("ಹೈನುಗಾರಿಕೆ")) {
     return "dairy farming";
   }
-  if (lower.includes("kirana") || lower.includes("grocery") || lower.includes("किराना") || lower.includes("दुकान") || lower.includes("retail")) {
+  if (lower.includes("kirana") || lower.includes("grocery") || lower.includes("किराना") || lower.includes("दुकान") || lower.includes("retail") || lower.includes("ಕಿರಾಣಿ") || lower.includes("ಅಂಗಡಿ")) {
     return "retail shop";
   }
   return "";
@@ -77,6 +87,9 @@ function detectCategory(text: string, trade: string): "Manufacturing" | "Service
     lower.includes("कारखाना") ||
     lower.includes("उत्पादन") ||
     lower.includes("workshop") ||
+    lower.includes("ಉತ್ಪಾದನೆ") ||
+    lower.includes("ಕಾರಖಾನೆ") ||
+    lower.includes("ವರ್ಕ್‌ಶಾಪ್") ||
     trade === "carpentry" ||
     trade === "welding & fabrication" ||
     trade === "pottery"
@@ -88,6 +101,8 @@ function detectCategory(text: string, trade: string): "Manufacturing" | "Service
     lower.includes("सेवा") ||
     lower.includes("repair") ||
     lower.includes("सिलाई") ||
+    lower.includes("ಸೇವೆ") ||
+    lower.includes("ಹೊಲಿಗೆ") ||
     trade === "tailoring" ||
     trade === "vehicle repair"
   ) {
@@ -103,6 +118,16 @@ export class MockAiService implements AiService {
 
   async simplifyTerm(input: Parameters<AiService["simplifyTerm"]>[0]) {
     const request = simplifyTermRequestSchema.parse(input);
+    if (request.language === "kn" || request.language.includes("kannada")) {
+      return {
+        explanation: `${request.term} ಎಂದರೆ ಸಾಲದ ನಿಯಮ ಮತ್ತು ಷರತ್ತುಗಳನ್ನು ಸರಳ ಕನ್ನಡದಲ್ಲಿ ವಿವರಿಸಲಾಗಿದೆ.`,
+      };
+    }
+    if (request.language === "hi" || request.language.includes("hindi")) {
+      return {
+        explanation: `${request.term} का अर्थ ऋण की संबंधित शर्त को सरल भाषा में समझाना है।`,
+      };
+    }
     return {
       explanation: `${request.term} means the corresponding loan condition in simpler language.`,
     };
@@ -156,13 +181,13 @@ export class MockAiService implements AiService {
     const trade = detectTrade(transcript);
     const projectCategory = detectCategory(transcript, trade);
 
-    const gender = (lower.includes("female") || lower.includes("mahila") || lower.includes("महिला") || lower.includes("woman") || lower.includes("women") || lower.includes("स्त्री"))
+    const gender = (lower.includes("female") || lower.includes("mahila") || lower.includes("महिला") || lower.includes("woman") || lower.includes("women") || lower.includes("स्त्री") || lower.includes("ಮಹಿಳ") || lower.includes("ಹೆಣ್ಣು") || lower.includes("ಸ್ತ್ರೀ"))
       ? "Female"
       : lower.includes("non-binary")
         ? "Non-binary"
         : lower.includes("transgender")
           ? "Transgender"
-          : (lower.includes("male") || lower.includes("purush") || lower.includes("पुरुष") || lower.includes("man") || lower.includes("पुरुष"))
+          : (lower.includes("male") || lower.includes("purush") || lower.includes("पुरुष") || lower.includes("man") || lower.includes("ಪುರುಷ") || lower.includes("ಗಂಡು"))
             ? "Male"
             : "Prefer not to say";
 
@@ -184,6 +209,19 @@ export class MockAiService implements AiService {
     const ranked = [...request.candidate_schemes].sort(
       (a, b) => b.eligibility_score - a.eligibility_score,
     );
+    const top = ranked[0];
+    const runnerUp = ranked[1];
+
+    if (request.language === "kn" || request.language.includes("kannada")) {
+      return {
+        top_scheme: top?.scheme_name || "Scheme",
+        explanation: `${top?.scheme_name || "ಈ ಯೋಜನೆ"} ನಿಮ್ಮ ಅರ್ಹತೆಯ ಪ್ರಕಾರ ಅತ್ಯುನ್ನತ ಹೊಂದಾಣಿಕೆಯನ್ನು ಹೊಂದಿದೆ.`,
+        runner_up_note: runnerUp
+          ? `${runnerUp.scheme_name} ಮುಂದಿನ ಹೊಂದಾಣಿಕೆಯಾಗಿದೆ.`
+          : "ಯಾವುದೇ ಪರ್ಯಾಯ ಯೋಜನೆ ಲಭ್ಯವಿಲ್ಲ.",
+      };
+    }
+
     return {
       top_scheme: ranked[0].scheme_name,
       explanation: `${ranked[0].scheme_name} has the strongest deterministic eligibility score among the supplied candidates.`,

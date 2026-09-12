@@ -8,7 +8,7 @@ import { requireAdmin, requireApplicant } from "@/lib/auth/guards";
 import { matchSchemes } from "@/lib/matching";
 import { prisma } from "@/lib/prisma";
 
-const supportedLanguageSchema = z.enum(["en", "hi"]).default("en");
+const supportedLanguageSchema = z.enum(["en", "hi", "kn", "mr", "ta", "te", "bn", "gu"]).default("en");
 const applicationIdSchema = z.string().trim().min(1).max(100);
 
 export interface IntentActionState {

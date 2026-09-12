@@ -24,6 +24,7 @@ const SUPPORTED_LANGUAGES = [
   { code: "auto", label: "Auto Detect", native: "स्वचालित पहचान" },
   { code: "hi", label: "Hindi", native: "हिंदी" },
   { code: "en", label: "English", native: "English" },
+  { code: "kn", label: "Kannada", native: "ಕನ್ನಡ" },
   { code: "mr", label: "Marathi", native: "मराठी" },
   { code: "ta", label: "Tamil", native: "தமிழ்" },
   { code: "te", label: "Telugu", native: "తెలుగు" },
@@ -288,7 +289,7 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
               <h3 className="text-base font-extrabold text-[#191917]">Voice-to-Form Auto-Fill</h3>
             </div>
             <p className="mt-0.5 text-xs font-medium text-[#1E3A2B]/75">
-              Speak in Hindi, English, Marathi or your regional language to automatically fill this form.
+              Speak in Hindi, English, Kannada, Marathi or your regional language to automatically fill this form.
             </p>
           </div>
         </div>
@@ -339,7 +340,7 @@ export function VoiceAutoFill({ onApply, disabled = false }: VoiceAutoFillProps)
               Try saying:
             </p>
             <p className="text-xs font-medium italic text-[#191917]/70">
-              &ldquo;मैं एक महिला दर्जी हूँ, मुझे सिलाई मशीन के लिए ₹50,000 का लोन चाहिए&rdquo; or &ldquo;I run a small carpentry workshop and need a loan of 1.5 lakhs&rdquo;
+              &ldquo;ನಾನು ಮಹಿಳಾ ಟೈಲರ್, ಹೊಲಿಗೆ ಯಂತ್ರಕ್ಕಾಗಿ ನನಗೆ ₹50,000 ಸಾಲ ಬೇಕು&rdquo; or &ldquo;मैं एक महिला दर्जी हूँ, मुझे ₹50,000 का लोन चाहिए&rdquo; or &ldquo;I run a small carpentry workshop and need a loan of 1.5 lakhs&rdquo;
             </p>
           </div>
 
