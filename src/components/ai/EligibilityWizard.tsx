@@ -72,7 +72,6 @@ export function EligibilityWizard() {
 
   return (
     <div className="space-y-8">
-      {/* AI INTAKE CONTAINER WITH TABS */}
       <div className="rounded-2xl border border-[#1E3A2B]/15 bg-white/95 p-6 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 border-b border-[#1E3A2B]/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -86,16 +85,14 @@ export function EligibilityWizard() {
             </h2>
           </div>
 
-          {/* Mode Switcher Tabs */}
           <div className="inline-flex shrink-0 rounded-xl bg-[#FAF6EE] p-1 border border-[#1E3A2B]/15">
             <button
               type="button"
               onClick={() => setIntakeMode("voice")}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                intakeMode === "voice"
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all cursor-pointer ${intakeMode === "voice"
                   ? "bg-[#1E3A2B] text-[#F7F3E9] shadow-xs"
                   : "text-[#1E3A2B]/75 hover:text-[#1E3A2B]"
-              }`}
+                }`}
             >
               <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -105,11 +102,10 @@ export function EligibilityWizard() {
             <button
               type="button"
               onClick={() => setIntakeMode("text")}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                intakeMode === "text"
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all cursor-pointer ${intakeMode === "text"
                   ? "bg-[#1E3A2B] text-[#F7F3E9] shadow-xs"
                   : "text-[#1E3A2B]/75 hover:text-[#1E3A2B]"
-              }`}
+                }`}
             >
               <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -128,7 +124,7 @@ export function EligibilityWizard() {
               <div>
                 <p className="text-xs font-bold text-[#1E3A2B]">Describe in any language</p>
                 <p className="text-xs text-[#191917]/70 mt-0.5">
-                  English, हिंदी, मराठी, Hinglish, or your native language. AI will extract form values automatically.
+                  English, हिंदी, ಕನ್ನಡ, मराठी, Hinglish, or your native language. AI will extract form values automatically.
                 </p>
               </div>
               <textarea
@@ -164,8 +160,6 @@ export function EligibilityWizard() {
           )}
         </div>
       </div>
-
-      {/* VOICE FILLED CONFIRMATION BANNER */}
       {isVoiceFilled && voiceAppliedIntent && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 shadow-sm">
           <div className="flex items-center gap-3">
@@ -195,8 +189,6 @@ export function EligibilityWizard() {
           </button>
         </div>
       )}
-
-      {/* FORM STEP 1 VERIFICATION */}
       <form action={profileAction} className="rounded-2xl border border-[#1E3A2B]/15 bg-white/95 p-6 sm:p-8 shadow-sm backdrop-blur-xs space-y-6" key={formVersion}>
         <div className="border-b border-[#1E3A2B]/10 pb-4">
           <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#B85228]">Step 1 Verification</span>
@@ -211,8 +203,6 @@ export function EligibilityWizard() {
             {profileState.error}
           </p>
         )}
-
-        {/* SECTION 1: ACTIVITY & DEMOGRAPHICS */}
         <div className="space-y-4">
           <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">1. Activity & Demographics</h3>
           <div className="grid gap-5 sm:grid-cols-2">
@@ -226,9 +216,8 @@ export function EligibilityWizard() {
                 )}
               </div>
               <select
-                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${
-                  isVoiceFilled && activeIntent?.projectCategory ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
-                }`}
+                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${isVoiceFilled && activeIntent?.projectCategory ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
+                  }`}
                 name="projectCategory"
                 required
                 defaultValue={activeIntent?.projectCategory ?? ""}
@@ -253,9 +242,8 @@ export function EligibilityWizard() {
                 )}
               </div>
               <input
-                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${
-                  isVoiceFilled && activeIntent?.trade ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
-                }`}
+                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${isVoiceFilled && activeIntent?.trade ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
+                  }`}
                 name="trade"
                 defaultValue={activeIntent?.trade ?? ""}
                 placeholder="e.g. Tailoring, Carpentry, Pottery"
@@ -283,9 +271,8 @@ export function EligibilityWizard() {
                 )}
               </div>
               <select
-                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${
-                  isVoiceFilled && activeIntent?.suggestedGender ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
-                }`}
+                className={`w-full rounded-xl border border-[#1E3A2B]/20 bg-[#FAF6EE]/50 px-3.5 py-2.5 text-sm font-medium text-[#191917] outline-none focus:border-[#1E3A2B] focus:ring-2 focus:ring-[#1E3A2B]/15 ${isVoiceFilled && activeIntent?.suggestedGender ? "border-[#1E3A2B] bg-[#1E3A2B]/5 font-bold" : ""
+                  }`}
                 name="gender"
                 required
                 defaultValue={activeIntent?.suggestedGender ?? "PREFER_NOT_TO_SAY"}
@@ -351,8 +338,6 @@ export function EligibilityWizard() {
             </label>
           )}
         </div>
-
-        {/* SECTION 3: APPLICANT GROUPS */}
         <div className="space-y-3 pt-2 border-t border-[#1E3A2B]/10">
           <div>
             <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#1E3A2B]">3. Applicant Category Tags</h3>
@@ -368,7 +353,6 @@ export function EligibilityWizard() {
           </div>
         </div>
 
-        {/* SUBMIT BUTTON */}
         <div className="pt-4 border-t border-[#1E3A2B]/10 flex items-center justify-end">
           <button className="button-primary bg-[#1E3A2B] hover:bg-[#162E21] text-[#F7F3E9] border-none px-8 py-3.5 text-sm font-extrabold rounded-xl shadow-md shadow-[#1E3A2B]/20 cursor-pointer transition-all" type="submit">
             Continue to Financial Details →
@@ -377,4 +361,4 @@ export function EligibilityWizard() {
       </form>
     </div>
   );
-}
+}

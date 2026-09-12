@@ -32,7 +32,8 @@ export function RecommendationExplainer({ applicationId }: { applicationId: stri
         <form action={formAction} className="flex items-center gap-2">
           <select className="field w-auto min-w-28" name="language" defaultValue="en" aria-label="Explanation language">
             <option value="en">English</option>
-            <option value="hi">Hindi</option>
+            <option value="hi">Hindi (हिंदी)</option>
+            <option value="kn">Kannada (ಕನ್ನಡ)</option>
           </select>
           <SubmitButton pendingLabel="Explaining...">Explain matches</SubmitButton>
         </form>

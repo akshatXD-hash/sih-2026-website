@@ -18,7 +18,8 @@ export function TermSimplifier({ text }: { text: string }) {
         <input type="hidden" name="term" value={text} />
         <select className="rounded-lg border border-[#1E3A2B]/20 bg-white px-2 py-2 text-xs font-bold text-[#191917]" name="language" defaultValue="en" aria-label="Explanation language">
           <option value="en">English</option>
-          <option value="hi">Hindi</option>
+          <option value="hi">Hindi (हिंदी)</option>
+          <option value="kn">Kannada (ಕನ್ನಡ)</option>
         </select>
         <SubmitButton className="button-secondary min-h-9 px-3 py-1.5 text-xs" pendingLabel="Explaining...">
           Explain simply with AI

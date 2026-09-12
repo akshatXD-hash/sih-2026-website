@@ -39,6 +39,18 @@ describe("Voice Speech-to-Text with Groq Whisper", () => {
     expect(result.language).toBe("mr");
   });
 
+  it("transcribes audio in Kannada with high fidelity", async () => {
+    const fakeAudio = Buffer.from("fake-kannada-audio-bytes");
+    const result = await transcribeAudio({
+      audio: fakeAudio,
+      language: "kn",
+    });
+
+    expect(result.transcript).toContain("ಟೈಲರ್");
+    expect(result.language).toBe("kn");
+    expect(result.confidence).toBeGreaterThan(0.9);
+  });
+
   it("throws a clear error when audio buffer is empty", async () => {
     const emptyBuffer = Buffer.from([]);
     await expect(
@@ -52,6 +64,21 @@ describe("Voice Speech-to-Text with Groq Whisper", () => {
 
 describe("Multilingual Voice-to-Form Intent Extraction", () => {
   const service = new MockAiService();
+
+  it("extracts parameters accurately for Kannada female tailoring applicant", async () => {
+    const transcript = "ನಾನು ಮಹಿಳಾ ಟೈಲರ್, ಹೊಸ ಹೊಲಿಗೆ ಯಂತ್ರ ಖರೀದಿಸಲು ನನಗೆ ₹50,000 ಸಾಲ ಬೇಕಾಗಿದೆ.";
+    const result = await service.extractApplicantIntent({
+      transcript,
+      language: "kn",
+    });
+
+    expect(result.project_category).toBe("services");
+    expect(result.trade).toBe("tailoring");
+    expect(result.requested_amount).toBe(50000);
+    expect(result.suggested_gender).toBe("FEMALE");
+    expect(result.requires_gender_confirmation).toBe(true);
+    expect(result.confidence).toBeGreaterThanOrEqual(0.9);
+  });
 
   it("extracts parameters accurately for Hindi female tailoring applicant", async () => {
     const transcript = "मैं एक महिला दर्जी हूँ, मुझे नई सिलाई मशीन के लिए ₹50,000 का लोन चाहिए।";
@@ -79,6 +106,18 @@ describe("Multilingual Voice-to-Form Intent Extraction", () => {
     expect(result.trade).toBe("carpentry");
     expect(result.requested_amount).toBe(150000);
     expect(result.requires_gender_confirmation).toBe(true);
+  });
+
+  it("extracts parameters accurately for Kannada carpentry with lakh amount", async () => {
+    const transcript = "ನಾನು ಮರದ ಕೆಲಸ (ಬಡಗಿ) ಮಾಡುತ್ತೇನೆ, ಕಾರ್ಯಾಗಾರ ವಿಸ್ತರಿಸಲು 1.5 ಲಕ್ಷ ಸಾಲ ಬೇಕು.";
+    const result = await service.extractApplicantIntent({
+      transcript,
+      language: "kn",
+    });
+
+    expect(result.project_category).toBe("manufacturing");
+    expect(result.trade).toBe("carpentry");
+    expect(result.requested_amount).toBe(150000);
   });
 
   it("extracts parameters for retail trade with annual income", async () => {
