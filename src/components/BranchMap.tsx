@@ -44,7 +44,7 @@ function createPopup(branch: ScoredBranch) {
   address.style.cssText = "font-size:12px;color:#64748b;margin-bottom:8px";
   address.textContent = [branch.addressLine, branch.pincode].filter(Boolean).join(" ");
   popup.append(address);
-  if (branch.schemeSupport) {
+  if (branch.schemeSupport && branch.schemeSupport.status !== "UNKNOWN") {
     const support = document.createElement("p");
     support.textContent = supportLabels[branch.schemeSupport.status];
     popup.append(support);
