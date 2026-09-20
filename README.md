@@ -5,7 +5,7 @@
 
 Kaarva is a production-grade public credit scheme discovery, matching, and application enablement platform built for the Smart India Hackathon (SIH 2026). It bridges the critical gap between grassroots citizens seeking microfinance, term credit, or educational loans and public lending institutions.
 
-The platform combines **deterministic, explainable rule matching**, **PostGIS geospatial bank directory intelligence**, **multilingual voice-to-intent extraction (Groq Whisper & Gemini 2.5 Flash)**, **multimodal certificate OCR verification**, **grounded policy advisory**, and an **audited administrative review state machine**.
+The platform combines **deterministic, explainable rule matching**, **PostGIS geospatial bank directory intelligence**, **multilingual voice-to-intent extraction (Groq Whisper & Gemini 2.5 Flash)**, **omnichannel WhatsApp & Twilio conversational bot integration**, **multimodal certificate OCR verification**, **grounded policy advisory**, and an **audited administrative review state machine**.
 
 ---
 
@@ -27,6 +27,7 @@ The platform combines **deterministic, explainable rule matching**, **PostGIS ge
   - [5.5 Financial Amortization & Provisional Pre-Sanction PDF](#55-financial-amortization--provisional-pre-sanction-pdf)
   - [5.6 Multimodal Document OCR & Cloudinary Vault](#56-multimodal-document-ocr--cloudinary-vault)
   - [5.7 Administrative Officer Dashboard & Audit State Machine](#57-administrative-officer-dashboard--audit-state-machine)
+  - [5.8 Omnichannel WhatsApp & Twilio Bot Integration](#58-omnichannel-whatsapp--twilio-bot-integration)
 - [6. Supported Schemes Catalog](#6-supported-schemes-catalog)
 - [7. Technology Stack Overview](#7-technology-stack-overview)
 - [8. Database Models & PostGIS Integration](#8-database-models--postgis-integration)
@@ -40,67 +41,69 @@ The platform combines **deterministic, explainable rule matching**, **PostGIS ge
 ---
 
 ## 1. Core Philosophy & Architectural Principles
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                               1. BENEFICIARY / CSC AGENT                               │
-│      • Audio Stream (11+ Indic Languages) ────► Groq Whisper STT (Large v3 Turbo)      │
-│      • Conversational Language Queries    ────► NLP Intent & Jargon Simplifier         │
-│      • Scanned PDF / Image Certificates   ────► Multimodal Gemini Vision OCR           │
-└───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                            │ Extracted Facts (JSON)
-                                            ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                2. DETERMINISTIC CORE                                   │
-│      • 100% Explainable Rule Evaluation (Met / Unmet / Missing Breakdown)              │
-│      • PostGIS Spatial Branch Locator & Bank Ranking (Distance, Quota, NPA%)           │
-│      • Financial Amortization Engine & Provisional Pre-Sanction PDF Generation         │
-└───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                            │
-                                            ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                             3. AUDITED OFFICER WORKFLOW                                │
-│      • Side-by-Side OCR Evidence & Original Document Review                            │
-│      • 90-Day Branch Scheme Support Verification with HTTPS URLs                       │
-│      • Strict Application State Machine (DRAFT ──► REVIEW ──► APPROVED / DISBURSED)    │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-1. **AI Assists, Rules Decide**: AI models extract structured intents from natural language, transcribe audio in regional dialects, simplify complex policy jargon, and perform multimodal OCR on certificates. AI **never** makes eligibility decisions, calculates sanction amounts, or overrides deterministic policy criteria.
-2. **Human in the Loop**: All AI-extracted fields (profile info, OCR annual income, caste categories) require explicit applicant confirmation before being saved to the database. Gender is never inferred from names or photos.
-3. **Auditability & Zero Hallucination**: Every status progression, officer verification note, and branch quota confirmation is attributed to a verified user with timestamped event logging. Scheme eligibility criteria are 100% transparent and traceable to official government gazettes.
-
----
-
-## 2. System Architecture & High-Level Flow
-
-Kaarva adopts a decoupled microservice architecture:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ NEXT.JS 16 FULLSTACK APPLICATION (Vercel / Node.js)                                     │
-│                                                                                         │
-│  ┌─────────────────────────┐   ┌─────────────────────────┐   ┌───────────────────────┐  │
-│  │   Applicant Wizard UI   │   │  Spatial Leaflet Maps   │   │ Officer Review Portal │  │
-│  │   (/eligibility, /app)  │   │  (/branches)            │   │ (/admin)              │  │
-│  └────────────┬────────────┘   └────────────┬────────────┘   └───────────┬───────────┘  │
-│               │                             │                            │              │
-│  ┌────────────▼─────────────────────────────▼────────────────────────────▼───────────┐  │
-│  │ TypeScript Gateway Layer (src/lib/ai-service/client.ts & src/lib/matching.ts)     │  │
-│  │ • Zod-validated Schemas   • Deterministic Matching Engine  • pdf-lib Builder      │  │
-│  └────────────┬─────────────────────────────┬────────────────────────────┬───────────┘  │
-└───────────────┼─────────────────────────────┼────────────────────────────┼──────────────┘
-                │ REST (Zod Contracts)        │ SQL / PostGIS Queries      │ Signed URLs
-                ▼                             ▼                            ▼
-┌───────────────────────────────┐ ┌─────────────────────────┐ ┌────────────────────────┐
-│ FASTAPI AI/ML MICROSERVICE    │ │ POSTGRESQL + POSTGIS    │ │ CLOUDINARY VAULT       │
-│ (Render / Docker Container)   │ │ (Neon Serverless)       │ │ (Authenticated Media)  │
-│                               │ │                         │ │                        │
-│ • Google Gemini 2.5 Flash     │ │ • 21,000+ OSM Banks     │ │ • 5-min Short-Lived    │
-│ • PyMuPDF (fitz) OCR Engine   │ │ • 162,000+ Place Nodes  │ │   Signed URLs          │
-│ • 75+ Policy Document RAG     │ │ • Spatial GiST Indexes  │ │ • Zero Public Storage  │
-│ • Pydantic v2 Strict Schemas  │ │ • Audited State Machine │ │   for Identity Proofs  │
-└───────────────────────────────┘ └─────────────────────────┘ └────────────────────────┘
+ 
+ ```
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │                               1. BENEFICIARY / CSC AGENT                               │
+ │      • Audio Stream (11+ Indic Languages) ────► Groq Whisper STT (Large v3 Turbo)      │
+ │      • Conversational Language Queries    ────► NLP Intent & Jargon Simplifier         │
+ │      • WhatsApp Voice & Text Notes (Twilio / Meta API) ──► Auto Scheme Intake          │
+ │      • Scanned PDF / Image Certificates   ────► Multimodal Gemini Vision OCR           │
+ └───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                             │ Extracted Facts (JSON)
+                                             ▼
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │                                2. DETERMINISTIC CORE                                   │
+ │      • 100% Explainable Rule Evaluation (Met / Unmet / Missing Breakdown)              │
+ │      • PostGIS Spatial Branch Locator & Bank Ranking (Distance, Quota, NPA%)           │
+ │      • Financial Amortization Engine & Provisional Pre-Sanction PDF Generation         │
+ └───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                             │
+                                             ▼
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │                             3. AUDITED OFFICER WORKFLOW                                │
+ │      • Side-by-Side OCR Evidence & Original Document Review                            │
+ │      • 90-Day Branch Scheme Support Verification with HTTPS URLs                       │
+ │      • Strict Application State Machine (DRAFT ──► REVIEW ──► APPROVED / DISBURSED)    │
+ └────────────────────────────────────────────────────────────────────────────────────────┘
+ ```
+ 
+ 1. **AI Assists, Rules Decide**: AI models extract structured intents from natural language, transcribe audio in regional dialects, simplify complex policy jargon, and perform multimodal OCR on certificates. AI **never** makes eligibility decisions, calculates sanction amounts, or overrides deterministic policy criteria.
+ 2. **Human in the Loop**: All AI-extracted fields (profile info, OCR annual income, caste categories) require explicit applicant confirmation before being saved to the database. Gender is never inferred from names or photos.
+ 3. **Auditability & Zero Hallucination**: Every status progression, officer verification note, and branch quota confirmation is attributed to a verified user with timestamped event logging. Scheme eligibility criteria are 100% transparent and traceable to official government gazettes.
+ 
+ ---
+ 
+ ## 2. System Architecture & High-Level Flow
+ 
+ Kaarva adopts a decoupled microservice architecture:
+ 
+ ```
+ ┌─────────────────────────────────────────────────────────────────────────────────────────┐
+ │ NEXT.JS 16 FULLSTACK APPLICATION (Vercel / Node.js)                                     │
+ │                                                                                         │
+ │  ┌─────────────────────────┐   ┌─────────────────────────┐   ┌───────────────────────┐  │
+ │  │   Applicant Wizard UI   │   │  Spatial Leaflet Maps   │   │ Officer Review Portal │  │
+ │  │   (/eligibility, /app)  │   │  (/branches)            │   │ (/admin)              │  │
+ │  └────────────┬────────────┘   └────────────┬────────────┘   └───────────┬───────────┘  │
+ │               │                             │                            │              │
+ │  ┌────────────▼─────────────────────────────▼────────────────────────────▼───────────┐  │
+ │  │ TypeScript Gateway Layer (src/lib/ai-service/client.ts & src/lib/matching.ts)     │  │
+ │  │ • Zod-validated Schemas   • Deterministic Matching Engine  • pdf-lib Builder      │  │
+ │  │ • WhatsApp / Twilio Webhooks (/api/webhooks/twilio-whatsapp, /api/webhooks/whatsapp)│
+ │  └────────────┬─────────────────────────────┬────────────────────────────┬───────────┘  │
+ └───────────────┼─────────────────────────────┼────────────────────────────┼──────────────┘
+                 │ REST (Zod Contracts)        │ SQL / PostGIS Queries      │ Signed URLs
+                 ▼                             ▼                            ▼
+ ┌───────────────────────────────┐ ┌─────────────────────────┐ ┌────────────────────────┐
+ │ FASTAPI AI/ML MICROSERVICE    │ │ POSTGRESQL + POSTGIS    │ │ CLOUDINARY VAULT       │
+ │ (Render / Docker Container)   │ │ (Neon Serverless)       │ │ (Authenticated Media)  │
+ │                               │ │                         │ │                        │
+ │ • Google Gemini 2.5 Flash     │ │ • 21,000+ OSM Banks     │ │ • 5-min Short-Lived    │
+ │ • PyMuPDF (fitz) OCR Engine   │ │ • 162,000+ Place Nodes  │ │   Signed URLs          │
+ │ • 75+ Policy Document RAG     │ │ • Spatial GiST Indexes  │ │ • Zero Public Storage  │
+ │ • Pydantic v2 Strict Schemas  │ │ • Audited State Machine │ │   for Identity Proofs  │
+ └───────────────────────────────┘ └─────────────────────────┘ └────────────────────────┘
 ```
 
 ---
@@ -245,6 +248,9 @@ AI_SERVICE_TIMEOUT_MS="30000"
 | `/admin/branch-support` | `ADMIN`, `REVIEWER` | Audit tool to search bank branches and record 90-day verified scheme confirmations with HTTPS links. |
 | `/api/applications/[id]/pre-sanction-pdf` | `APPLICANT` | Protected Route Handler streaming generated binary pre-sanction PDF documents. |
 | `/api/voice/auto-fill` | `APPLICANT` | Multilingual speech-to-text + structured intent extraction pipeline. |
+| `/api/webhooks/twilio-whatsapp` | Public Webhook | Inbound Twilio WhatsApp webhook (voice note & text processing, TwiML response, REST fallback). |
+| `/api/webhooks/whatsapp` | Public Webhook | Meta WhatsApp Cloud API webhook (`hub.challenge` verification & event handling). |
+| `/api/whatsapp/simulate` | `APPLICANT`, Public | Test endpoint simulating incoming WhatsApp text or voice messages with vernacular matching replies. |
 
 ---
 
@@ -297,6 +303,15 @@ AI_SERVICE_TIMEOUT_MS="30000"
   $$\text{DRAFT} \longrightarrow \text{EXTRACTION\_PENDING} \longrightarrow \text{EXTRACTION\_COMPLETE} \longrightarrow \text{SUBMITTED} \longrightarrow \text{UNDER\_REVIEW} \longrightarrow \begin{cases} \text{APPROVED} \longrightarrow \text{DISBURSED} \\ \text{REJECTED} \\ \text{WITHDRAWN} \end{cases}$$
 * **90-Day Branch Support Auditing:** Reviewing officers audit bank branch scheme capabilities and log confirmations with HTTPS evidence URLs, automatically expiring after 90 days to prevent stale routing.
 
+### 5.8 Omnichannel WhatsApp & Twilio Bot Integration
+* **Dual Ingress Webhooks:**
+  - **Twilio WhatsApp (`/api/webhooks/twilio-whatsapp`):** Processes incoming WhatsApp voice and text messages from Twilio numbers, downloads media recordings, and responds dynamically via TwiML XML and Twilio REST API fallback.
+  - **Meta WhatsApp Cloud API (`/api/webhooks/whatsapp`):** Handles Meta verification handshakes (`hub.challenge`) and parses incoming message batches, media IDs, and status receipts.
+* **Grassroots Voice Note Processing:** Automatically downloads audio voice notes (`.ogg`, `.opus`, `.mp4`), transcribes them with Groq Whisper across regional Indic languages (Hindi, Kannada, Marathi, Tamil, etc.), and extracts structured loan requirements.
+* **Deterministic Matching on WhatsApp:** Feeds extracted parameters directly into the deterministic matching engine and crafts a culturally tailored, vernacular reply containing the best-fit scheme, subsidy estimates, and nearby participating banks.
+* **Seamless Web Onboarding:** Sends direct deep-links (`/register?source=whatsapp&trade=...&amount=...`) to transition grassroots applicants seamlessly from WhatsApp chat to the pre-filled web application wizard.
+* **Test Simulation API (`/api/whatsapp/simulate`):** Dedicated route allowing offline demonstration and automated testing of WhatsApp flows without active third-party carrier credits.
+
 ---
 
 ## 6. Supported Schemes Catalog
@@ -335,10 +350,11 @@ Kaarva catalogues active schemes across three core public credit pillars:
 | **LLM & Vision** | Google Gemini 2.5 Flash | Multimodal certificate OCR, conversational RAG, term simplifier |
 | **Speech-to-Text** | Groq Whisper (`whisper-large-v3-turbo`) | High-speed multilingual voice transcription in 11+ Indic languages |
 | **Document Processing**| PyMuPDF (`fitz`), Pillow (PIL) | PDF page rendering and image pre-processing for Vision OCR |
+| **Messaging & Channels** | Twilio Programmable Messaging & WhatsApp Cloud API | Omnichannel voice note & text scheme intake, TwiML, and Graph API responses |
 | **Storage & Media** | Cloudinary SDK | Authenticated document storage with short-lived 5-minute signed URLs |
 | **PDF Generation** | `pdf-lib` | Server-rendered binary provisional pre-sanction PDF documents |
 | **Authentication** | Auth.js (NextAuth v5 beta), bcryptjs | Role-based session authorization, Server Action guards |
-| **Testing** | Vitest 4.1.11 | Fast unit and integration tests (25 test suites, 175+ tests) |
+| **Testing** | Vitest 4.1.11 | Fast unit and integration tests (26 test suites, 200+ tests) |
 
 ---
 
@@ -403,6 +419,19 @@ AI_SERVICE_TIMEOUT_MS="30000"
 # Speech-to-Text (Groq Whisper)
 # ==========================================
 GROQ_API_KEY="gsk_..."
+
+# ==========================================
+# WhatsApp & Twilio Messaging Integration
+# ==========================================
+# Twilio WhatsApp Webhook & API
+TWILIO_ACCOUNT_SID="ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+TWILIO_AUTH_TOKEN="your-twilio-auth-token"
+TWILIO_PHONE_NUMBER="whatsapp:+17372508034"
+
+# Meta WhatsApp Cloud API (Graph API)
+WHATSAPP_API_TOKEN="EAA..."
+WHATSAPP_PHONE_NUMBER_ID="your-whatsapp-phone-id"
+WHATSAPP_VERIFY_TOKEN="kaarva_sih_2026_verify_token"
 
 # ==========================================
 # Document Storage (Cloudinary Vault)
